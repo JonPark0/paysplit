@@ -1,5 +1,5 @@
-const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcrypt');
+import { v4 as uuidv4 } from 'uuid'
+import bcrypt from 'bcrypt'
 
 class Room {
     constructor(db) {
@@ -139,4 +139,4 @@ class Room {
     }
 }
 
-module.exports = Room;
+export default Room

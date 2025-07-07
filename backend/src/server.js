@@ -8,13 +8,10 @@ import dotenv from 'dotenv'
 import cron from 'node-cron'
 
 // Import utilities and services
-import { createRequire } from 'module'
+import Database from './utils/database.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/logger.js'
 import { cleanupExpiredRooms } from './services/cleanup.js'
-
-const require = createRequire(import.meta.url)
-const Database = require('./utils/database.js')
 
 // Import routes
 import roomRoutes from './routes/rooms.js'

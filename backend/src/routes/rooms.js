@@ -4,12 +4,9 @@ import { asyncHandler } from '../middleware/errorHandler.js'
 import { validate, roomSchemas, sanitizeBody } from '../middleware/validation.js'
 import { checkRoomAccess, generateSessionToken } from '../middleware/auth.js'
 import { ActivityLogger } from '../middleware/logger.js'
-import { createRequire } from 'module'
 import QRCode from 'qrcode'
-
-const require = createRequire(import.meta.url)
-const Room = require('../models/Room.js')
-const Participant = require('../models/Participant.js')
+import Room from '../models/Room.js'
+import Participant from '../models/Participant.js'
 
 const router = express.Router()
 

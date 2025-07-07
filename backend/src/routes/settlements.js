@@ -3,12 +3,9 @@ import { asyncHandler } from '../middleware/errorHandler.js'
 import { validate, splitSchemas, settlementSchemas, sanitizeBody } from '../middleware/validation.js'
 import { checkRoomAccess } from '../middleware/auth.js'
 import { ActivityLogger } from '../middleware/logger.js'
-import { createRequire } from 'module'
-
-const require = createRequire(import.meta.url)
-const Settlement = require('../models/Settlement.js')
-const Room = require('../models/Room.js')
-const Participant = require('../models/Participant.js')
+import Settlement from '../models/Settlement.js'
+import Room from '../models/Room.js'
+import Participant from '../models/Participant.js'
 
 const router = express.Router()
 
