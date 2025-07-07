@@ -2,10 +2,13 @@ import express from 'express'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { checkRoomAccess } from '../middleware/auth.js'
 import { ActivityLogger } from '../middleware/logger.js'
-import Room from '../models/Room.js'
-import Receipt from '../models/Receipt.js'
-import Settlement from '../models/Settlement.js'
-import Participant from '../models/Participant.js'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+const Room = require('../models/Room.js')
+const Receipt = require('../models/Receipt.js')
+const Settlement = require('../models/Settlement.js')
+const Participant = require('../models/Participant.js')
 
 const router = express.Router()
 

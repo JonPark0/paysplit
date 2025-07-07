@@ -3,8 +3,12 @@ import { asyncHandler } from '../middleware/errorHandler.js'
 import { validate, splitSchemas, settlementSchemas, sanitizeBody } from '../middleware/validation.js'
 import { checkRoomAccess } from '../middleware/auth.js'
 import { ActivityLogger } from '../middleware/logger.js'
-import Settlement from '../models/Settlement.js'
-import Room from '../models/Room.js'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+const Settlement = require('../models/Settlement.js')
+const Room = require('../models/Room.js')
+const Participant = require('../models/Participant.js')
 
 const router = express.Router()
 
@@ -523,7 +527,6 @@ export default function(db) {
       }
 
       // Get balance and splits
-      const Participant = (await import('../models/Participant.js')).default
       const participantModel = new Participant(db)
       
       const balance = await participantModel.getParticipantBalance(participantId)

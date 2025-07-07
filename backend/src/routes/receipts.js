@@ -4,9 +4,12 @@ import { validate, receiptSchemas, sanitizeBody } from '../middleware/validation
 import { checkRoomAccess } from '../middleware/auth.js'
 import { uploadSingle, handleMulterError } from '../utils/multer.js'
 import { ActivityLogger } from '../middleware/logger.js'
-import Receipt from '../models/Receipt.js'
 import ImageProcessor from '../services/imageProcessor.js'
-import Room from '../models/Room.js'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+const Receipt = require('../models/Receipt.js')
+const Room = require('../models/Room.js')
 
 const router = express.Router()
 
