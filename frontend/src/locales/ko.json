@@ -1,0 +1,211 @@
+{
+  "common": {
+    "loading": "로딩 중...",
+    "error": "오류",
+    "success": "성공",
+    "warning": "경고",
+    "info": "정보",
+    "confirm": "확인",
+    "cancel": "취소",
+    "close": "닫기",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "수정",
+    "create": "생성",
+    "back": "뒤로",
+    "next": "다음",
+    "prev": "이전",
+    "copy": "복사",
+    "share": "공유",
+    "download": "다운로드",
+    "admin": "관리자",
+    "leaveRoom": "방 나가기"
+  },
+  "navigation": {
+    "home": "홈",
+    "rooms": "방",
+    "receipts": "영수증",
+    "splits": "분할",
+    "settlements": "정산",
+    "features": "기능",
+    "settings": "설정",
+    "help": "도움말",
+    "language": "언어"
+  },
+  "home": {
+    "title": "PaySplit",
+    "subtitle": "더치페이 계산을 편리하게",
+    "description": "영수증을 스캔하고 친구들과 쉽게 비용을 분할하세요",
+    "createRoom": "방 만들기",
+    "joinRoom": "방 참여하기",
+    "features": {
+      "ocr": {
+        "title": "영수증 스캔",
+        "description": "카메라로 영수증을 촬영하면 자동으로 항목을 인식합니다"
+      },
+      "split": {
+        "title": "스마트 분할",
+        "description": "다양한 방식으로 비용을 분할하고 최적의 정산을 계산합니다"
+      },
+      "secure": {
+        "title": "안전한 보안",
+        "description": "모든 데이터는 암호화되어 안전하게 보관됩니다"
+      }
+    }
+  },
+  "room": {
+    "create": {
+      "title": "새 방 만들기",
+      "roomName": "방 이름 (선택사항)",
+      "roomNamePlaceholder": "예: 회식비 정산",
+      "adminName": "관리자 이름",
+      "adminNamePlaceholder": "당신의 이름을 입력하세요",
+      "password": "비밀번호",
+      "passwordPlaceholder": "방 비밀번호를 입력하세요",
+      "language": "언어",
+      "creating": "방 생성 중...",
+      "success": "방이 성공적으로 생성되었습니다!"
+    },
+    "join": {
+      "title": "방 참여하기",
+      "entryCode": "입장 코드",
+      "entryCodePlaceholder": "6자리 입장 코드를 입력하세요",
+      "participantName": "참가자 이름",
+      "participantNamePlaceholder": "당신의 이름을 입력하세요",
+      "password": "비밀번호",
+      "passwordPlaceholder": "비밀번호를 입력하세요",
+      "joining": "참여 중...",
+      "success": "방에 성공적으로 참여했습니다!"
+    },
+    "info": {
+      "entryCode": "입장 코드",
+      "participants": "참가자",
+      "receipts": "영수증",
+      "totalAmount": "총 금액",
+      "status": "상태",
+      "created": "생성일",
+      "lastActivity": "마지막 활동"
+    },
+    "share": {
+      "title": "방 공유하기",
+      "copyUrl": "URL 복사",
+      "copyMessage": "메시지 복사",
+      "qrCode": "QR 코드",
+      "downloadQr": "QR 코드 다운로드",
+      "shareMessage": "PaySplit 방에 참여하세요!\n\n방 URL: {{url}}\n입장 코드: {{code}}\n\nPaySplit으로 쉽게 더치페이 계산하기: https://beta.nphani.com"
+    },
+    "status": {
+      "active": "활성",
+      "settling": "정산 중",
+      "completed": "정산 완료"
+    }
+  },
+  "receipt": {
+    "upload": {
+      "title": "영수증 업로드",
+      "dragDrop": "파일을 여기에 드래그하거나 클릭하여 선택하세요",
+      "camera": "카메라로 촬영",
+      "file": "파일 선택",
+      "manual": "수동 입력",
+      "supportedFormats": "지원 형식: JPG, PNG, PDF (최대 10MB)",
+      "processing": "처리 중...",
+      "ocrFailed": "OCR 처리에 실패했습니다. 다른 방법을 시도해보세요.",
+      "retry": "다시 시도",
+      "manualEntry": "수동 입력"
+    },
+    "edit": {
+      "title": "영수증 편집",
+      "addItem": "항목 추가",
+      "itemName": "항목명",
+      "itemPrice": "가격",
+      "quantity": "수량",
+      "category": "카테고리",
+      "total": "총합",
+      "calculated": "계산된 총합",
+      "difference": "차이",
+      "saveChanges": "변경사항 저장"
+    },
+    "title": "영수증",
+    "item": {
+      "food": "음식",
+      "drink": "음료",
+      "service": "서비스",
+      "tax": "세금",
+      "tip": "팁",
+      "other": "기타"
+    }
+  },
+  "split": {
+    "title": "비용 분할",
+    "method": {
+      "equal": "균등 분할",
+      "custom": "사용자 지정",
+      "percentage": "비율 분할",
+      "manual": "수동 입력"
+    },
+    "participants": "참가자 선택",
+    "selectAll": "전체 선택",
+    "deselectAll": "전체 해제",
+    "amount": "금액",
+    "percentage": "비율",
+    "remaining": "남은 금액",
+    "total": "총 금액",
+    "calculate": "계산하기",
+    "reset": "초기화"
+  },
+  "settlement": {
+    "title": "정산 내역",
+    "summary": "정산 요약",
+    "transactions": "송금 내역",
+    "whoOwesWhom": "누가 누구에게",
+    "amount": "금액",
+    "status": "상태",
+    "markComplete": "완료 표시",
+    "pending": "대기 중",
+    "completed": "완료",
+    "noTransactions": "송금할 내역이 없습니다.",
+    "balance": {
+      "youOwe": "당신이 지불할 금액",
+      "owesYou": "당신이 받을 금액",
+      "settled": "정산 완료"
+    },
+    "optimize": "최적화된 정산",
+    "total": "총 {{count}}건의 송금"
+  },
+  "errors": {
+    "networkError": "네트워크 오류가 발생했습니다",
+    "roomNotFound": "방을 찾을 수 없습니다",
+    "invalidEntryCode": "잘못된 입장 코드입니다",
+    "wrongPassword": "비밀번호가 올바르지 않습니다",
+    "participantNotFound": "참가자를 찾을 수 없습니다",
+    "uploadFailed": "파일 업로드에 실패했습니다",
+    "ocrFailed": "OCR 처리에 실패했습니다",
+    "calculationError": "계산 중 오류가 발생했습니다",
+    "unauthorized": "권한이 없습니다",
+    "serverError": "서버 오류가 발생했습니다",
+    "required": "필수 항목입니다",
+    "invalidFormat": "올바르지 않은 형식입니다",
+    "tooLarge": "파일이 너무 큽니다"
+  },
+  "validation": {
+    "required": "{{field}}은(는) 필수 항목입니다",
+    "minLength": "{{field}}은(는) 최소 {{min}}자 이상이어야 합니다",
+    "maxLength": "{{field}}은(는) 최대 {{max}}자 이하여야 합니다",
+    "invalidEmail": "올바른 이메일 주소를 입력하세요",
+    "invalidNumber": "올바른 숫자를 입력하세요",
+    "positiveNumber": "0보다 큰 숫자를 입력하세요"
+  },
+  "currency": {
+    "krw": "원",
+    "usd": "달러",
+    "format": "{{amount}}{{currency}}"
+  },
+  "date": {
+    "just_now": "방금 전",
+    "minutes_ago": "{{count}}분 전",
+    "hours_ago": "{{count}}시간 전",
+    "days_ago": "{{count}}일 전",
+    "weeks_ago": "{{count}}주 전",
+    "months_ago": "{{count}}개월 전"
+  }
+}

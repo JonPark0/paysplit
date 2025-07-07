@@ -1,0 +1,211 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning", 
+    "info": "Info",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "next": "Next",
+    "prev": "Previous",
+    "copy": "Copy",
+    "share": "Share",
+    "download": "Download",
+    "admin": "Admin",
+    "leaveRoom": "Leave Room"
+  },
+  "navigation": {
+    "home": "Home",
+    "rooms": "Rooms",
+    "receipts": "Receipts",
+    "splits": "Splits",
+    "settlements": "Settlements",
+    "features": "Features",
+    "settings": "Settings",
+    "help": "Help",
+    "language": "Language"
+  },
+  "home": {
+    "title": "PaySplit",
+    "subtitle": "Split bills with ease",
+    "description": "Scan receipts and easily split costs with friends",
+    "createRoom": "Create Room",
+    "joinRoom": "Join Room",
+    "features": {
+      "ocr": {
+        "title": "Receipt Scanning",
+        "description": "Take a photo of your receipt and automatically recognize items"
+      },
+      "split": {
+        "title": "Smart Splitting",
+        "description": "Split costs in various ways and calculate optimal settlements"
+      },
+      "secure": {
+        "title": "Secure",
+        "description": "All data is encrypted and stored securely"
+      }
+    }
+  },
+  "room": {
+    "create": {
+      "title": "Create New Room",
+      "roomName": "Room Name (Optional)",
+      "roomNamePlaceholder": "e.g., Dinner Split",
+      "adminName": "Admin Name",
+      "adminNamePlaceholder": "Enter your name",
+      "password": "Password",
+      "passwordPlaceholder": "Enter room password",
+      "language": "Language",
+      "creating": "Creating room...",
+      "success": "Room created successfully!"
+    },
+    "join": {
+      "title": "Join Room",
+      "entryCode": "Entry Code",
+      "entryCodePlaceholder": "Enter 6-digit entry code",
+      "participantName": "Participant Name",
+      "participantNamePlaceholder": "Enter your name",
+      "password": "Password",
+      "passwordPlaceholder": "Enter password",
+      "joining": "Joining...",
+      "success": "Successfully joined the room!"
+    },
+    "info": {
+      "entryCode": "Entry Code",
+      "participants": "Participants",
+      "receipts": "Receipts",
+      "totalAmount": "Total Amount",
+      "status": "Status",
+      "created": "Created",
+      "lastActivity": "Last Activity"
+    },
+    "share": {
+      "title": "Share Room",
+      "copyUrl": "Copy URL",
+      "copyMessage": "Copy Message",
+      "qrCode": "QR Code",
+      "downloadQr": "Download QR Code",
+      "shareMessage": "Join my PaySplit room!\n\nRoom URL: {{url}}\nEntry Code: {{code}}\n\nEasy bill splitting with PaySplit: https://beta.nphani.com"
+    },
+    "status": {
+      "active": "Active",
+      "settling": "Settling",
+      "completed": "Completed"
+    }
+  },
+  "receipt": {
+    "upload": {
+      "title": "Upload Receipt",
+      "dragDrop": "Drag files here or click to select",
+      "camera": "Take Photo",
+      "file": "Select File",
+      "manual": "Manual Entry",
+      "supportedFormats": "Supported formats: JPG, PNG, PDF (max 10MB)",
+      "processing": "Processing...",
+      "ocrFailed": "OCR processing failed. Please try another method.",
+      "retry": "Retry",
+      "manualEntry": "Manual Entry"
+    },
+    "edit": {
+      "title": "Edit Receipt",
+      "addItem": "Add Item",
+      "itemName": "Item Name",
+      "itemPrice": "Price",
+      "quantity": "Quantity",
+      "category": "Category",
+      "total": "Total",
+      "calculated": "Calculated Total",
+      "difference": "Difference",
+      "saveChanges": "Save Changes"
+    },
+    "title": "Receipts",
+    "item": {
+      "food": "Food",
+      "drink": "Drink",
+      "service": "Service",
+      "tax": "Tax",
+      "tip": "Tip",
+      "other": "Other"
+    }
+  },
+  "split": {
+    "title": "Split Costs",
+    "method": {
+      "equal": "Equal Split",
+      "custom": "Custom",
+      "percentage": "Percentage Split",
+      "manual": "Manual Entry"
+    },
+    "participants": "Select Participants",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "amount": "Amount",
+    "percentage": "Percentage",
+    "remaining": "Remaining Amount",
+    "total": "Total Amount",
+    "calculate": "Calculate",
+    "reset": "Reset"
+  },
+  "settlement": {
+    "title": "Settlement Details",
+    "summary": "Settlement Summary",
+    "transactions": "Transactions",
+    "whoOwesWhom": "Who owes whom",
+    "amount": "Amount",
+    "status": "Status",
+    "markComplete": "Mark Complete",
+    "pending": "Pending",
+    "completed": "Completed",
+    "noTransactions": "No transactions needed.",
+    "balance": {
+      "youOwe": "You owe",
+      "owesYou": "Owes you",
+      "settled": "Settled"
+    },
+    "optimize": "Optimized Settlement",
+    "total": "Total {{count}} transaction(s)"
+  },
+  "errors": {
+    "networkError": "Network error occurred",
+    "roomNotFound": "Room not found",
+    "invalidEntryCode": "Invalid entry code",
+    "wrongPassword": "Incorrect password",
+    "participantNotFound": "Participant not found",
+    "uploadFailed": "File upload failed",
+    "ocrFailed": "OCR processing failed",
+    "calculationError": "Calculation error occurred",
+    "unauthorized": "Unauthorized",
+    "serverError": "Server error occurred",
+    "required": "This field is required",
+    "invalidFormat": "Invalid format",
+    "tooLarge": "File is too large"
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "minLength": "{{field}} must be at least {{min}} characters",
+    "maxLength": "{{field}} must not exceed {{max}} characters",
+    "invalidEmail": "Please enter a valid email address",
+    "invalidNumber": "Please enter a valid number",
+    "positiveNumber": "Please enter a number greater than 0"
+  },
+  "currency": {
+    "krw": "KRW",
+    "usd": "USD",
+    "format": "{{currency}}{{amount}}"
+  },
+  "date": {
+    "just_now": "Just now",
+    "minutes_ago": "{{count}} minutes ago",
+    "hours_ago": "{{count}} hours ago",
+    "days_ago": "{{count}} days ago",
+    "weeks_ago": "{{count}} weeks ago",
+    "months_ago": "{{count}} months ago"
+  }
+}

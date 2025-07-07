@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    container_name: paysplit-frontend
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    networks:
+      - paysplit-network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/", "-k"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build: ./backend
+    container_name: paysplit-backend
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./database:/app/database
+      - ./uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - DATABASE_PATH=/app/database/paysplit.db
+      - UPLOAD_PATH=/app/uploads
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-here}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-32-character-encryption-key-here}
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://beta.nphani.com}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-900000}
+      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100}
+      - CLEANUP_INTERVAL=${CLEANUP_INTERVAL:-86400000}
+      - DATA_RETENTION_DAYS=${DATA_RETENTION_DAYS:-30}
+    networks:
+      - paysplit-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  paysplit-network:
+    driver: bridge
+    
+volumes:
+  database_data:
+    driver: local
+  uploads_data:
+    driver: local
