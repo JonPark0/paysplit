@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   frontend:
     build: ./frontend
     container_name: paysplit-frontend
     ports:
-      - "8081:80"
+      - "${FRONTEND_PORT:-8081}:80"
     depends_on:
       - backend
     networks:
@@ -23,13 +21,13 @@ services:
     build: ./backend
     container_name: paysplit-backend
     ports:
-      - "3002:3002"
+      - "${BACKEND_PORT:-3002}:3002"
     volumes:
       - ./database:/app/database
       - ./uploads:/app/uploads
     environment:
       - NODE_ENV=production
-      - PORT=3002
+      - PORT=${BACKEND_PORT:-3002}
       - DATABASE_PATH=/app/database/paysplit.db
       - UPLOAD_PATH=/app/uploads
       - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-here}
@@ -39,6 +37,7 @@ services:
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100}
       - CLEANUP_INTERVAL=${CLEANUP_INTERVAL:-86400000}
       - DATA_RETENTION_DAYS=${DATA_RETENTION_DAYS:-30}
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-10485760}
     networks:
       - paysplit-network
     restart: unless-stopped
