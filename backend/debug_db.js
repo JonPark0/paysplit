@@ -1,7 +1,7 @@
 import Database from './src/utils/database.js';
 
 async function checkDatabase() {
-    const db = new Database('/var/www/paysplit/database/paysplit.db');
+    const db = new Database(process.env.DATABASE_PATH || '/app/database/paysplit.db');
     await db.init();
     
     const tables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
