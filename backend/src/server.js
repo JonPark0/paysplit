@@ -81,7 +81,7 @@ app.use('/api/', limiter)
 // Upload rate limiting (stricter)
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 uploads per windowMs
+  max: parseInt(process.env.UPLOAD_RATE_LIMIT_MAX) || 10, // limit each IP to uploads per windowMs
   message: {
     error: 'Too many upload requests from this IP, please try again later.'
   }
