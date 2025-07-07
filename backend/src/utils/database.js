@@ -55,9 +55,8 @@ class Database {
         const migrations = [
             {
                 name: '001_create_tables',
-                sql: `
-                    -- 방 테이블
-                    CREATE TABLE IF NOT EXISTS rooms (
+                statements: [
+                    `CREATE TABLE IF NOT EXISTS rooms (
                         id TEXT PRIMARY KEY,
                         name TEXT,
                         admin_name TEXT NOT NULL,
@@ -68,10 +67,8 @@ class Database {
                         settlement_status TEXT DEFAULT 'active',
                         expires_at DATETIME,
                         language TEXT DEFAULT 'ko'
-                    );
-
-                    -- 참가자 테이블
-                    CREATE TABLE IF NOT EXISTS participants (
+                    )`,
+                    `CREATE TABLE IF NOT EXISTS participants (
                         id TEXT PRIMARY KEY,
                         room_id TEXT NOT NULL,
                         name TEXT NOT NULL,
@@ -79,10 +76,8 @@ class Database {
                         is_admin BOOLEAN DEFAULT FALSE,
                         joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
-                    );
-
-                    -- 영수증 테이블
-                    CREATE TABLE IF NOT EXISTS receipts (
+                    )`,
+                    `CREATE TABLE IF NOT EXISTS receipts (
                         id TEXT PRIMARY KEY,
                         room_id TEXT NOT NULL,
                         uploader_id TEXT NOT NULL,
@@ -93,10 +88,8 @@ class Database {
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
                         FOREIGN KEY (uploader_id) REFERENCES participants(id)
-                    );
-
-                    -- 영수증 항목 테이블
-                    CREATE TABLE IF NOT EXISTS receipt_items (
+                    )`,
+                    `CREATE TABLE IF NOT EXISTS receipt_items (
                         id TEXT PRIMARY KEY,
                         receipt_id TEXT NOT NULL,
                         name TEXT NOT NULL,
@@ -104,10 +97,8 @@ class Database {
                         quantity INTEGER DEFAULT 1,
                         category TEXT,
                         FOREIGN KEY (receipt_id) REFERENCES receipts(id) ON DELETE CASCADE
-                    );
-
-                    -- 분할 테이블
-                    CREATE TABLE IF NOT EXISTS splits (
+                    )`,
+                    `CREATE TABLE IF NOT EXISTS splits (
                         id TEXT PRIMARY KEY,
                         item_id TEXT NOT NULL,
                         participant_id TEXT NOT NULL,
@@ -115,10 +106,8 @@ class Database {
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (item_id) REFERENCES receipt_items(id) ON DELETE CASCADE,
                         FOREIGN KEY (participant_id) REFERENCES participants(id)
-                    );
-
-                    -- 정산 테이블
-                    CREATE TABLE IF NOT EXISTS settlements (
+                    )`,
+                    `CREATE TABLE IF NOT EXISTS settlements (
                         id TEXT PRIMARY KEY,
                         room_id TEXT NOT NULL,
                         from_participant_id TEXT NOT NULL,
@@ -130,10 +119,8 @@ class Database {
                         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
                         FOREIGN KEY (from_participant_id) REFERENCES participants(id),
                         FOREIGN KEY (to_participant_id) REFERENCES participants(id)
-                    );
-
-                    -- 활동 로그 테이블
-                    CREATE TABLE IF NOT EXISTS activity_logs (
+                    )`,
+                    `CREATE TABLE IF NOT EXISTS activity_logs (
                         id TEXT PRIMARY KEY,
                         room_id TEXT NOT NULL,
                         participant_id TEXT,
@@ -141,10 +128,8 @@ class Database {
                         details TEXT,
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
-                    );
-
-                    -- 세션 테이블
-                    CREATE TABLE IF NOT EXISTS sessions (
+                    )`,
+                    `CREATE TABLE IF NOT EXISTS sessions (
                         id TEXT PRIMARY KEY,
                         room_id TEXT NOT NULL,
                         participant_id TEXT NOT NULL,
@@ -153,8 +138,8 @@ class Database {
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
                         FOREIGN KEY (participant_id) REFERENCES participants(id)
-                    );
-                `
+                    )`
+                ]
             },
             {
                 name: '002_create_indexes',
@@ -185,7 +170,18 @@ class Database {
                 console.log(`Running migration: ${migration.name}`);
                 try {
                     await this.run('BEGIN TRANSACTION');
-                    await this.run(migration.sql);
+                    
+                    // Handle both old format (sql) and new format (statements)
+                    if (migration.statements) {
+                        // New format: array of statements
+                        for (const statement of migration.statements) {
+                            await this.run(statement);
+                        }
+                    } else if (migration.sql) {
+                        // Old format: single SQL string
+                        await this.run(migration.sql);
+                    }
+                    
                     await this.run(
                         'INSERT INTO migrations (name) VALUES (?)',
                         [migration.name]
