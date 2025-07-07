@@ -183,11 +183,20 @@ class Database {
 
             if (!existing) {
                 console.log(`Running migration: ${migration.name}`);
-                await this.run(migration.sql);
-                await this.run(
-                    'INSERT INTO migrations (name) VALUES (?)',
-                    [migration.name]
-                );
+                try {
+                    await this.run('BEGIN TRANSACTION');
+                    await this.run(migration.sql);
+                    await this.run(
+                        'INSERT INTO migrations (name) VALUES (?)',
+                        [migration.name]
+                    );
+                    await this.run('COMMIT');
+                    console.log(`Migration ${migration.name} completed successfully`);
+                } catch (error) {
+                    console.error(`Migration ${migration.name} failed:`, error);
+                    await this.run('ROLLBACK');
+                    throw error;
+                }
             }
         }
 
