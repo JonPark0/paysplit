@@ -34,6 +34,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
+      styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "blob:"],
       connectSrc: ["'self'"],
@@ -57,8 +58,10 @@ app.use(cors({
 app.use(compression())
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+const maxFileSize = parseInt(process.env.MAX_FILE_SIZE) || 10485760 // 10MB default
+const bodyLimit = Math.ceil(maxFileSize / 1024 / 1024) + 'mb' // Convert to MB with buffer
+app.use(express.json({ limit: bodyLimit }))
+app.use(express.urlencoded({ extended: true, limit: bodyLimit }))
 
 // Logging middleware
 if (process.env.NODE_ENV !== 'test') {

@@ -22,7 +22,7 @@ const fileFilter = (req, file, cb) => {
 }
 
 const limits = {
-  fileSize: 10 * 1024 * 1024, // 10MB limit
+  fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024, // Configurable file size limit
   files: 1 // Only one file at a time
 }
 
@@ -40,9 +40,10 @@ export const uploadSingle = upload.single('receipt')
 export const handleMulterError = (error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
+      const maxSizeMB = Math.ceil((parseInt(process.env.MAX_FILE_SIZE) || 10485760) / 1024 / 1024)
       return res.status(413).json({
         error: 'File too large',
-        message: 'File size must be less than 10MB'
+        message: `File size must be less than ${maxSizeMB}MB`
       })
     }
     
