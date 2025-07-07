@@ -1,6 +1,9 @@
 import fs from 'fs/promises'
 import path from 'path'
-import Room from '../models/Room.js'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+const Room = require('../models/Room.js')
 
 // Cleanup expired rooms and associated data
 export const cleanupExpiredRooms = async (db) => {
