@@ -19,7 +19,11 @@
     "share": "공유",
     "download": "다운로드",
     "admin": "관리자",
-    "leaveRoom": "방 나가기"
+    "leaveRoom": "방 나가기",
+    "settings": "설정",
+    "backToRoom": "뒤로가기",
+    "settlementManagement": "정산관리",
+    "recalculate": "재계산"
   },
   "navigation": {
     "home": "홈",
@@ -137,6 +141,9 @@
   },
   "split": {
     "title": "비용 분할",
+    "manager": {
+      "title": "분할 관리"
+    },
     "method": {
       "equal": "균등 분할",
       "custom": "사용자 지정",

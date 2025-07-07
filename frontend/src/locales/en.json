@@ -19,7 +19,11 @@
     "share": "Share",
     "download": "Download",
     "admin": "Admin",
-    "leaveRoom": "Leave Room"
+    "leaveRoom": "Leave Room",
+    "settings": "Settings",
+    "backToRoom": "Back to Room",
+    "settlementManagement": "Settlement Management",
+    "recalculate": "Recalculate"
   },
   "navigation": {
     "home": "Home",
@@ -137,6 +141,9 @@
   },
   "split": {
     "title": "Split Costs",
+    "manager": {
+      "title": "Split Manager"
+    },
     "method": {
       "equal": "Equal Split",
       "custom": "Custom",

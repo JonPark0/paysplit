@@ -82,7 +82,7 @@ const SplitManager = ({ roomId, onBack }) => {
           </div>
           <div className="mt-4">
             <Button onClick={loadData} variant="outline">
-              다시 시도
+              {t('receipt.upload.retry')}
             </Button>
           </div>
         </div>
@@ -116,26 +116,32 @@ const SplitManager = ({ roomId, onBack }) => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-neutral-900">
+          <h2 className="text-xl sm:text-2xl font-bold text-neutral-900">
             {t('split.manager.title')}
           </h2>
-          <p className="text-neutral-600 mt-1">
+          <p className="text-neutral-600 mt-1 text-sm sm:text-base">
             영수증을 선택하여 분할하고 정산을 관리하세요
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Button
             onClick={() => setCurrentView('settlement')}
             variant="outline"
             leftIcon={<Calculator className="w-4 h-4" />}
+            className="text-sm sm:text-base whitespace-nowrap"
           >
-            정산 관리
+            {t('common.settlementManagement')}
           </Button>
           {onBack && (
-            <Button onClick={onBack} variant="outline" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-              뒤로가기
+            <Button 
+              onClick={onBack} 
+              variant="outline" 
+              leftIcon={<ArrowLeft className="w-4 h-4" />}
+              className="text-sm sm:text-base whitespace-nowrap"
+            >
+              {t('common.backToRoom')}
             </Button>
           )}
         </div>

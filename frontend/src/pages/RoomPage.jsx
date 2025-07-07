@@ -18,6 +18,7 @@ import Button from '../components/common/Button'
 import { SplitManager } from '../components/split'
 import { Settlement } from '../components/settlement'
 import { ReceiptUpload, ReceiptEditor } from '../components/receipt'
+import { ShareModal } from '../components/room'
 import { useRoomStore } from '../stores/roomStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { roomAPI, receiptAPI, settlementAPI } from '../services/api'
@@ -50,6 +51,8 @@ const RoomPage = () => {
   const [showReceiptUpload, setShowReceiptUpload] = useState(false)
   const [showReceiptEdit, setShowReceiptEdit] = useState(false)
   const [selectedReceipt, setSelectedReceipt] = useState(null)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [qrData, setQrData] = useState(null)
 
   // Load room data
   useEffect(() => {
@@ -127,9 +130,8 @@ const RoomPage = () => {
   const handleShareRoom = async () => {
     try {
       const qrResponse = await roomAPI.getQRCode(roomId)
-      // TODO: Implement share modal
-      console.log('QR Code:', qrResponse)
-      toast.success(t('common.copied'))
+      setQrData(qrResponse)
+      setShowShareModal(true)
     } catch (error) {
       toast.error(t('errors.serverError'))
     }
@@ -209,6 +211,7 @@ const RoomPage = () => {
                 <Button
                   variant="outline"
                   leftIcon={<Settings className="w-4 h-4" />}
+                  onClick={() => toast.info('설정 기능은 곧 추가될 예정입니다')}
                 >
                   {t('common.settings')}
                 </Button>
@@ -429,6 +432,14 @@ const RoomPage = () => {
           </div>
         </div>
       )}
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        roomData={currentRoom}
+        qrData={qrData}
+      />
     </div>
   )
 }
