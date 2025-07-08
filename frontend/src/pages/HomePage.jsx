@@ -8,10 +8,12 @@ import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 import RoomSelector from '../components/room/RoomSelector'
+import RecaptchaInfo from '../components/common/RecaptchaInfo'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useRoomStore } from '../stores/roomStore'
 import { roomAPI } from '../services/api'
 import { createValidator, roomCreationRules, roomJoinRules } from '../utils/validation'
+import recaptchaService from '../services/recaptcha'
 
 const HomePage = () => {
   const { t } = useTranslation()
@@ -59,9 +61,13 @@ const HomePage = () => {
     setCreateErrors({})
 
     try {
+      // Get reCAPTCHA token
+      const recaptchaToken = await recaptchaService.getRoomCreateToken()
+      
       const response = await roomAPI.create({
         ...createForm,
-        language: language
+        language: language,
+        recaptchaToken
       })
 
       // Update stores
@@ -94,7 +100,13 @@ const HomePage = () => {
     setJoinErrors({})
 
     try {
-      const response = await roomAPI.join(joinForm)
+      // Get reCAPTCHA token
+      const recaptchaToken = await recaptchaService.getRoomJoinToken()
+      
+      const response = await roomAPI.join({
+        ...joinForm,
+        recaptchaToken
+      })
 
       // Update stores
       setCurrentRoom(response.room)
@@ -230,6 +242,8 @@ const HomePage = () => {
                     >
                       {loading ? t('room.create.creating') : t('home.createRoom')}
                     </Button>
+                    
+                    <RecaptchaInfo className="mt-3" />
                   </form>
                 ) : (
                   <form onSubmit={handleJoinRoom} className="space-y-4">
@@ -274,6 +288,8 @@ const HomePage = () => {
                     >
                       {loading ? t('room.join.joining') : t('home.joinRoom')}
                     </Button>
+                    
+                    <RecaptchaInfo className="mt-3" />
                   </form>
                 )}
               </div>

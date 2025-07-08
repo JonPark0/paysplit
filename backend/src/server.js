@@ -3,7 +3,8 @@ import helmet from 'helmet'
 import cors from 'cors'
 import compression from 'compression'
 import morgan from 'morgan'
-import rateLimit from 'express-rate-limit'
+// Rate limiting removed - replaced by reCAPTCHA V3
+// import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import cron from 'node-cron'
 
@@ -57,26 +58,8 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(requestLogger)
 }
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // limit each IP to 100 requests per windowMs
-  message: {
-    error: 'Too many requests from this IP, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-app.use('/api/', limiter)
-
-// Upload rate limiting (stricter)
-const uploadLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.UPLOAD_RATE_LIMIT_MAX) || 10, // limit each IP to uploads per windowMs
-  message: {
-    error: 'Too many upload requests from this IP, please try again later.'
-  }
-})
+// Rate limiting replaced by reCAPTCHA V3 - see middleware/recaptcha.js
+// Individual routes now use reCAPTCHA verification instead of global rate limiting
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -89,9 +72,9 @@ app.get('/api/health', (req, res) => {
   })
 })
 
-// API routes
+// API routes - reCAPTCHA protection applied at individual route level
 app.use('/api/rooms', roomRoutes(db))
-app.use('/api/receipts', uploadLimiter, receiptRoutes(db))
+app.use('/api/receipts', receiptRoutes(db))
 app.use('/api/settlements', settlementRoutes(db))
 app.use('/api/archive', archiveRoutes(db))
 app.use('/api/ollama', ollamaRoutes)

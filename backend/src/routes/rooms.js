@@ -4,6 +4,7 @@ import { asyncHandler } from '../middleware/errorHandler.js'
 import { validate, roomSchemas, sanitizeBody } from '../middleware/validation.js'
 import { checkRoomAccess, generateSessionToken } from '../middleware/auth.js'
 import { ActivityLogger } from '../middleware/logger.js'
+import { verifyRecaptchaRoomCreate, verifyRecaptchaRoomJoin } from '../middleware/recaptcha.js'
 import QRCode from 'qrcode'
 import Room from '../models/Room.js'
 import Participant from '../models/Participant.js'
@@ -19,6 +20,7 @@ export default function(db) {
   router.post('/create', 
     sanitizeBody,
     validate(roomSchemas.create),
+    verifyRecaptchaRoomCreate,
     asyncHandler(async (req, res) => {
       const { name, adminName, password, language } = req.body
 
@@ -85,6 +87,7 @@ export default function(db) {
   router.post('/join',
     sanitizeBody,
     validate(roomSchemas.join),
+    verifyRecaptchaRoomJoin,
     asyncHandler(async (req, res) => {
       const { entryCode, participantName, password } = req.body
 

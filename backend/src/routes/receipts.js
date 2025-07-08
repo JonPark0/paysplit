@@ -4,6 +4,7 @@ import { validate, receiptSchemas, sanitizeBody } from '../middleware/validation
 import { checkRoomAccess } from '../middleware/auth.js'
 import { uploadSingle, handleMulterError } from '../utils/multer.js'
 import { ActivityLogger } from '../middleware/logger.js'
+import { verifyRecaptchaReceiptUpload } from '../middleware/recaptcha.js'
 import ImageProcessor from '../services/imageProcessor.js'
 import Receipt from '../models/Receipt.js'
 import Room from '../models/Room.js'
@@ -74,6 +75,7 @@ export default function(db) {
     checkRoomAccess(db),
     sanitizeBody,
     validate(receiptSchemas.create),
+    verifyRecaptchaReceiptUpload,
     asyncHandler(async (req, res) => {
       const { roomId } = req.params
       const { participant } = req

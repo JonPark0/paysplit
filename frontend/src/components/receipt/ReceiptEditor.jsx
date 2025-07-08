@@ -9,6 +9,7 @@ import { receiptAPI } from '../../services/api'
 import { formatCurrency, validateAmount } from '../../utils/currency'
 import { validateReceiptItem } from '../../utils/validation'
 import { useRoomStore } from '../../stores/roomStore'
+import recaptchaService from '../../services/recaptcha'
 
 const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
   const { t } = useTranslation()
@@ -119,10 +120,14 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
 
     setLoading(true)
     try {
+      // Get reCAPTCHA token
+      const recaptchaToken = await recaptchaService.getReceiptUploadToken()
+      
       const receiptData_to_save = {
         totalAmount: receiptData.total,
         currency: receiptData.currency,
         payerId: receiptData.payerId,
+        recaptchaToken,
         items: receiptData.items.map(item => ({
           name: item.name.trim(),
           price: parseFloat(item.price),
