@@ -11,13 +11,7 @@ class OCRService {
     if (this.isInitialized) return
 
     try {
-      this.worker = await Tesseract.createWorker({
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`)
-          }
-        }
-      })
+      this.worker = await Tesseract.createWorker()
 
       await this.worker.loadLanguage('eng+kor')
       await this.worker.initialize('eng+kor')
@@ -43,13 +37,19 @@ class OCRService {
 
       console.log('Starting OCR processing...')
       
-      const { data } = await this.worker.recognize(imageFile, {
-        logger: (m) => {
-          if (m.status === 'recognizing text' && onProgress) {
-            onProgress(Math.round(m.progress * 100))
-          }
-        }
-      })
+      // Simple progress simulation since we can't use logger callbacks
+      if (onProgress) {
+        onProgress(10)
+        setTimeout(() => onProgress(30), 500)
+        setTimeout(() => onProgress(60), 1000)
+        setTimeout(() => onProgress(90), 1500)
+      }
+      
+      const { data } = await this.worker.recognize(imageFile)
+
+      if (onProgress) {
+        onProgress(100)
+      }
 
       console.log('OCR completed:', data.text)
       
