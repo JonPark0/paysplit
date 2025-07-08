@@ -29,7 +29,7 @@ const Settings = ({ roomId, onClose }) => {
   const navigate = useNavigate()
   
   const { language } = useSettingsStore()
-  const { currentRoom, currentParticipant, clearCurrentRoomData } = useRoomStore()
+  const { currentRoom, currentParticipant, clearCurrentRoomData, removeRoom } = useRoomStore()
   
   const [activeTab, setActiveTab] = useState('logs')
   const [logs, setLogs] = useState([])
@@ -142,16 +142,17 @@ const Settings = ({ roomId, onClose }) => {
       // Call backend API to leave room
       await roomAPI.leaveRoom(roomId)
       
-      // Clear current room data but keep other room history
+      // Remove room from history and clear current room data
+      removeRoom(roomId)
       clearCurrentRoomData()
+      
+      // Close settings modal first
+      onClose()
       
       toast.success('방에서 나왔습니다')
       
       // Navigate to home
       navigate(`/${language}`)
-      
-      // Close settings modal
-      onClose()
       
     } catch (error) {
       console.error('Failed to leave room:', error)

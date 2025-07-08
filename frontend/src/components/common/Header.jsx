@@ -162,12 +162,12 @@ const Header = () => {
                 >
                   {t('navigation.features')}
                 </button>
-                <a
-                  href="#help"
+                <button
+                  onClick={() => navigate(`/${language}/help`)}
                   className="text-neutral-600 hover:text-neutral-900 text-sm font-medium transition-colors"
                 >
                   {t('navigation.help')}
-                </a>
+                </button>
               </nav>
             )}
             
@@ -238,13 +238,15 @@ const Header = () => {
                 >
                   {t('navigation.features')}
                 </button>
-                <a
-                  href="#help"
-                  className="flex items-center px-3 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 rounded-md"
-                  onClick={() => setIsMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    navigate(`/${language}/help`)
+                    setIsMenuOpen(false)
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 rounded-md"
                 >
                   {t('navigation.help')}
-                </a>
+                </button>
               </>
             )}
             

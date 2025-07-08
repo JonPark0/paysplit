@@ -12,6 +12,9 @@ import HomePage from './pages/HomePage'
 import RoomPage from './pages/RoomPage'
 import JoinPage from './pages/JoinPage'
 import FeaturesPage from './pages/FeaturesPage'
+import HelpPage from './pages/HelpPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import TermsOfServicePage from './pages/TermsOfServicePage'
 import NotFoundPage from './pages/NotFoundPage'
 
 // Stores
@@ -50,6 +53,9 @@ function App() {
           <Route path="/:lang" element={<LanguageRouter />}>
             <Route index element={<HomePage />} />
             <Route path="features" element={<FeaturesPage />} />
+            <Route path="help" element={<HelpPage />} />
+            <Route path="privacy" element={<PrivacyPolicyPage />} />
+            <Route path="terms" element={<TermsOfServicePage />} />
             <Route path="room/:roomId" element={<RoomPage />} />
           </Route>
           

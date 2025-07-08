@@ -1,13 +1,17 @@
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { Heart, Github, Globe } from 'lucide-react'
+import { useSettingsStore } from '../../stores/settingsStore'
 
 const Footer = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { language } = useSettingsStore()
 
   return (
     <footer className="bg-white border-t border-neutral-200 safe-bottom">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* About */}
           <div>
             <h3 className="text-sm font-semibold text-neutral-900 mb-4">
@@ -21,25 +25,30 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Features */}
-          <div>
-            <h3 className="text-sm font-semibold text-neutral-900 mb-4">
-              {t('navigation.features')}
-            </h3>
-            <ul className="space-y-2 text-sm text-neutral-600">
-              <li>{t('home.features.ocr.title')}</li>
-              <li>{t('home.features.split.title')}</li>
-              <li>{t('home.features.secure.title')}</li>
-              <li>PWA Support</li>
-            </ul>
-          </div>
-
           {/* Links */}
           <div>
             <h3 className="text-sm font-semibold text-neutral-900 mb-4">
               Links
             </h3>
             <div className="space-y-2">
+              <button
+                onClick={() => navigate(`/${language}/help`)}
+                className="block text-sm text-neutral-600 hover:text-neutral-900 transition-colors text-left"
+              >
+                도움말
+              </button>
+              <button
+                onClick={() => navigate(`/${language}/privacy`)}
+                className="block text-sm text-neutral-600 hover:text-neutral-900 transition-colors text-left"
+              >
+                개인정보 처리방침
+              </button>
+              <button
+                onClick={() => navigate(`/${language}/terms`)}
+                className="block text-sm text-neutral-600 hover:text-neutral-900 transition-colors text-left"
+              >
+                이용약관
+              </button>
               <a
                 href="https://nphani.com"
                 target="_blank"
@@ -48,18 +57,6 @@ const Footer = () => {
               >
                 <Globe className="w-4 h-4 mr-2" />
                 nphani.com
-              </a>
-              <a
-                href="#privacy"
-                className="block text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href="#terms"
-                className="block text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
-              >
-                Terms of Service
               </a>
             </div>
           </div>
