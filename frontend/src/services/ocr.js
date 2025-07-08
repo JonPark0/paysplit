@@ -1,32 +1,14 @@
-import Tesseract from 'tesseract.js'
-
-// OCR Service using Tesseract.js
+// OCR Service with OLLAMA Gemma3:4b and Tesseract.js fallback
 class OCRService {
   constructor() {
-    this.worker = null
+    this.ollamaEndpoint = '/api/ollama' // Proxy through backend
     this.isInitialized = false
   }
 
   async initialize() {
     if (this.isInitialized) return
-
-    try {
-      this.worker = await Tesseract.createWorker()
-
-      await this.worker.loadLanguage('eng+kor')
-      await this.worker.initialize('eng+kor')
-      
-      await this.worker.setParameters({
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz가-힣.,()- \n',
-        tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-      })
-
-      this.isInitialized = true
-      console.log('OCR Service initialized')
-    } catch (error) {
-      console.error('Failed to initialize OCR:', error)
-      throw error
-    }
+    this.isInitialized = true
+    console.log('OCR Service initialized with OLLAMA + Tesseract fallback')
   }
 
   async processImage(imageFile, onProgress) {
@@ -35,42 +17,138 @@ class OCRService {
         await this.initialize()
       }
 
-      console.log('Starting OCR processing...')
+      console.log('Starting OCR processing with OLLAMA...')
       
-      // Simple progress simulation since we can't use logger callbacks
       if (onProgress) {
         onProgress(10)
-        setTimeout(() => onProgress(30), 500)
-        setTimeout(() => onProgress(60), 1000)
-        setTimeout(() => onProgress(90), 1500)
-      }
-      
-      const { data } = await this.worker.recognize(imageFile)
-
-      if (onProgress) {
-        onProgress(100)
       }
 
-      console.log('OCR completed:', data.text)
+      // Try OLLAMA first for better Korean support
+      try {
+        const ollamaResult = await this.processWithOllama(imageFile, onProgress)
+        if (ollamaResult.items.length > 0) {
+          return ollamaResult
+        }
+      } catch (error) {
+        console.warn('OLLAMA processing failed, falling back to Tesseract:', error)
+      }
+
+      // Fallback to Tesseract if OLLAMA fails
+      return await this.processWithTesseract(imageFile, onProgress)
+
+    } catch (error) {
+      console.error('All OCR methods failed:', error)
+      throw new Error('OCR processing failed: ' + error.message)
+    }
+  }
+
+  async processWithOllama(imageFile, onProgress) {
+    try {
+      if (onProgress) onProgress(30)
+
+      // Convert image to base64
+      const base64Image = await this.fileToBase64(imageFile)
       
+      if (onProgress) onProgress(50)
+
+      // Send to OLLAMA via backend proxy
+      const response = await fetch(this.ollamaEndpoint + '/process-receipt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: base64Image,
+          prompt: `영수증 이미지를 분석하여 다음 JSON 형식으로 응답해주세요:
+{
+  "items": [
+    {"name": "상품명", "price": 가격, "quantity": 수량}
+  ],
+  "total": 총액,
+  "store": "상점명"
+}
+
+한국어 텍스트를 정확히 인식하고, 상품명과 가격을 추출해주세요. 가격은 숫자만 반환하세요.`
+        })
+      })
+
+      if (onProgress) onProgress(80)
+
+      if (!response.ok) {
+        throw new Error(`OLLAMA API error: ${response.status}`)
+      }
+
+      const result = await response.json()
+      
+      if (onProgress) onProgress(100)
+
+      return {
+        rawText: result.text || '',
+        confidence: 90, // OLLAMA typically has good confidence
+        items: result.items || [],
+        total: result.total || 0,
+        metadata: {
+          words: result.items?.length || 0,
+          lines: result.items?.length || 0,
+          processingTime: Date.now(),
+          method: 'ollama_gemma3'
+        }
+      }
+
+    } catch (error) {
+      console.error('OLLAMA processing failed:', error)
+      throw error
+    }
+  }
+
+  async processWithTesseract(imageFile, onProgress) {
+    // Import Tesseract dynamically to avoid loading if not needed
+    const Tesseract = await import('tesseract.js')
+    
+    try {
+      if (onProgress) onProgress(60)
+
+      const worker = await Tesseract.default.createWorker()
+      
+      if (onProgress) onProgress(80)
+
+      const { data } = await worker.recognize(imageFile)
+      await worker.terminate()
+
+      if (onProgress) onProgress(100)
+
       // Parse the OCR result
       const parsedData = this.parseReceiptText(data.text)
       
       return {
         rawText: data.text,
-        confidence: data.confidence,
+        confidence: data.confidence || 50,
         items: parsedData.items,
         total: parsedData.total,
         metadata: {
           words: data.words?.length || 0,
           lines: data.lines?.length || 0,
-          processingTime: Date.now()
+          processingTime: Date.now(),
+          method: 'tesseract_fallback'
         }
       }
+
     } catch (error) {
-      console.error('OCR processing failed:', error)
-      throw new Error('OCR processing failed: ' + error.message)
+      console.error('Tesseract processing failed:', error)
+      throw error
     }
+  }
+
+  async fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const base64 = reader.result.split(',')[1] // Remove data:image/xxx;base64, prefix
+        resolve(base64)
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
   }
 
   parseReceiptText(text) {
@@ -191,12 +269,8 @@ class OCRService {
   }
 
   async terminate() {
-    if (this.worker) {
-      await this.worker.terminate()
-      this.worker = null
-      this.isInitialized = false
-      console.log('OCR Service terminated')
-    }
+    // No persistent resources to clean up in this implementation
+    console.log('OCR Service terminated')
   }
 
   // Validate OCR result quality

@@ -18,6 +18,7 @@ import roomRoutes from './routes/rooms.js'
 import receiptRoutes from './routes/receipts.js'
 import settlementRoutes from './routes/settlements.js'
 import archiveRoutes from './routes/archive.js'
+import ollamaRoutes from './routes/ollama.js'
 
 // Load environment variables
 dotenv.config()
@@ -93,6 +94,7 @@ app.use('/api/rooms', roomRoutes(db))
 app.use('/api/receipts', uploadLimiter, receiptRoutes(db))
 app.use('/api/settlements', settlementRoutes(db))
 app.use('/api/archive', archiveRoutes(db))
+app.use('/api/ollama', ollamaRoutes)
 
 // 404 handler
 app.use(notFoundHandler)
