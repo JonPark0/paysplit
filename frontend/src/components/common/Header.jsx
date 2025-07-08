@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Menu, X, Globe, Settings, Home, Users } from 'lucide-react'
+import { Menu, X, Globe, Home, ChevronDown } from 'lucide-react'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useRoomStore } from '../../stores/roomStore'
 
@@ -12,7 +12,9 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   
   const { language, setLanguage } = useSettingsStore()
-  const { currentRoom, currentParticipant, leaveRoom } = useRoomStore()
+  const { currentRoom, currentParticipant, leaveRoom, rooms, switchToRoom, getRecentRooms } = useRoomStore()
+  const [showRoomDropdown, setShowRoomDropdown] = useState(false)
+  const dropdownRef = useRef(null)
 
   const toggleLanguage = () => {
     const newLanguage = language === 'ko' ? 'en' : 'ko'
@@ -40,6 +42,29 @@ const Header = () => {
     navigate(`/${language}`)
     setIsMenuOpen(false)
   }
+
+  const handleRoomSwitch = (roomId) => {
+    switchToRoom(roomId)
+    navigate(`/${language}/room/${roomId}`)
+    setShowRoomDropdown(false)
+  }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowRoomDropdown(false)
+      }
+    }
+
+    if (showRoomDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showRoomDropdown])
 
   const isRoomPage = currentRoom !== null
 
@@ -85,6 +110,56 @@ const Header = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isRoomPage ? (
               <>
+                {/* Room Switcher */}
+                {rooms.length > 1 && (
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setShowRoomDropdown(!showRoomDropdown)}
+                      className="btn-ghost text-sm flex items-center"
+                    >
+                      다른 방
+                      <ChevronDown className="w-4 h-4 ml-1" />
+                    </button>
+                    
+                    {showRoomDropdown && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white border border-neutral-200 rounded-lg shadow-lg z-50">
+                        <div className="p-2">
+                          <div className="text-xs font-medium text-neutral-500 px-3 py-2">
+                            최근 방
+                          </div>
+                          {getRecentRooms().slice(0, 5).map(room => (
+                            <button
+                              key={room.id}
+                              onClick={() => handleRoomSwitch(room.id)}
+                              className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-neutral-50 transition-colors ${
+                                room.id === currentRoom?.id ? 'bg-primary-50 text-primary-600' : 'text-neutral-700'
+                              }`}
+                            >
+                              <div className="font-medium truncate">
+                                {room.name || `방 ${room.entryCode}`}
+                              </div>
+                              <div className="text-xs text-neutral-500">
+                                {room.entryCode}
+                              </div>
+                            </button>
+                          ))}
+                          <div className="border-t border-neutral-100 mt-2 pt-2">
+                            <button
+                              onClick={() => {
+                                navigate(`/${language}`)
+                                setShowRoomDropdown(false)
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded transition-colors"
+                            >
+                              모든 방 보기
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 <button
                   onClick={handleLeaveRoom}
                   className="btn-ghost text-sm"

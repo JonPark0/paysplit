@@ -15,6 +15,12 @@ const useRoomStore = create(
       currentParticipant: null,
       sessionToken: null,
 
+      // Multiple room management
+      rooms: [], // Array of rooms user has access to
+      roomSessions: {}, // Map of roomId -> sessionToken
+      roomParticipants: {}, // Map of roomId -> participant object
+      lastAccessedRooms: [], // Recently accessed rooms for quick access
+
       // Loading states
       loading: {
         room: false,
@@ -39,6 +45,68 @@ const useRoomStore = create(
       addParticipant: (participant) => set((state) => ({
         participants: [...state.participants, participant]
       })),
+
+      // Multiple room management
+      addRoom: (room, participant, sessionToken) => set((state) => {
+        const rooms = state.rooms.filter(r => r.id !== room.id)
+        const lastAccessed = state.lastAccessedRooms.filter(id => id !== room.id)
+        
+        return {
+          rooms: [room, ...rooms],
+          roomSessions: { ...state.roomSessions, [room.id]: sessionToken },
+          roomParticipants: { ...state.roomParticipants, [room.id]: participant },
+          lastAccessedRooms: [room.id, ...lastAccessed].slice(0, 5) // Keep only 5 recent rooms
+        }
+      }),
+
+      switchToRoom: (roomId) => set((state) => {
+        const room = state.rooms.find(r => r.id === roomId)
+        const participant = state.roomParticipants[roomId]
+        const sessionToken = state.roomSessions[roomId]
+        
+        if (!room || !participant || !sessionToken) {
+          return state // Room not found or incomplete data
+        }
+
+        const lastAccessed = state.lastAccessedRooms.filter(id => id !== roomId)
+        
+        return {
+          currentRoom: room,
+          currentParticipant: participant,
+          sessionToken: sessionToken,
+          lastAccessedRooms: [roomId, ...lastAccessed].slice(0, 5)
+        }
+      }),
+
+      removeRoom: (roomId) => set((state) => {
+        const rooms = state.rooms.filter(r => r.id !== roomId)
+        const roomSessions = { ...state.roomSessions }
+        const roomParticipants = { ...state.roomParticipants }
+        const lastAccessedRooms = state.lastAccessedRooms.filter(id => id !== roomId)
+        
+        delete roomSessions[roomId]
+        delete roomParticipants[roomId]
+        
+        return {
+          rooms,
+          roomSessions,
+          roomParticipants,
+          lastAccessedRooms
+        }
+      }),
+
+      getRoomById: (roomId) => {
+        const state = get()
+        return state.rooms.find(r => r.id === roomId)
+      },
+
+      getRecentRooms: () => {
+        const state = get()
+        return state.lastAccessedRooms
+          .map(id => state.rooms.find(r => r.id === id))
+          .filter(Boolean)
+          .slice(0, 5)
+      },
 
       // Participant session
       setCurrentParticipant: (participant) => set({ currentParticipant: participant }),
@@ -150,7 +218,35 @@ const useRoomStore = create(
         }
       },
 
-      // Clear all room data
+      // Clear current room data (but keep room history)
+      clearCurrentRoomData: () => set((state) => ({
+        currentRoom: null,
+        participants: [],
+        receipts: [],
+        settlements: [],
+        splits: [],
+        currentParticipant: null,
+        sessionToken: null,
+        loading: {
+          room: false,
+          receipts: false,
+          settlements: false,
+          upload: false,
+        },
+        errors: {
+          room: null,
+          receipts: null,
+          settlements: null,
+          upload: null,
+        },
+        // Keep room history
+        rooms: state.rooms,
+        roomSessions: state.roomSessions,
+        roomParticipants: state.roomParticipants,
+        lastAccessedRooms: state.lastAccessedRooms,
+      })),
+
+      // Clear all room data (including history)
       clearRoomData: () => set({
         currentRoom: null,
         participants: [],
@@ -159,6 +255,10 @@ const useRoomStore = create(
         splits: [],
         currentParticipant: null,
         sessionToken: null,
+        rooms: [],
+        roomSessions: {},
+        roomParticipants: {},
+        lastAccessedRooms: [],
         loading: {
           room: false,
           receipts: false,
@@ -181,12 +281,17 @@ const useRoomStore = create(
     }),
     {
       name: 'paysplit-room',
-      version: 1,
+      version: 2,
       partialize: (state) => ({
         // Only persist essential data
         currentRoom: state.currentRoom,
         currentParticipant: state.currentParticipant,
         sessionToken: state.sessionToken,
+        // Multiple room data
+        rooms: state.rooms,
+        roomSessions: state.roomSessions,
+        roomParticipants: state.roomParticipants,
+        lastAccessedRooms: state.lastAccessedRooms,
       }),
     }
   )

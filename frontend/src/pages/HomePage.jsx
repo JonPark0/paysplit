@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import LoadingSpinner from '../components/common/LoadingSpinner'
+import RoomSelector from '../components/room/RoomSelector'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useRoomStore } from '../stores/roomStore'
 import { roomAPI } from '../services/api'
@@ -16,11 +17,12 @@ const HomePage = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { language } = useSettingsStore()
-  const { setCurrentRoom, setCurrentParticipant, setSessionToken } = useRoomStore()
+  const { setCurrentRoom, setCurrentParticipant, setSessionToken, addRoom, rooms } = useRoomStore()
 
   // Form states
   const [activeTab, setActiveTab] = useState('create') // 'create' or 'join'
   const [loading, setLoading] = useState(false)
+  const [showRoomForm, setShowRoomForm] = useState(rooms.length === 0) // Show form if no rooms
   
   // Create room form
   const [createForm, setCreateForm] = useState({
@@ -66,6 +68,7 @@ const HomePage = () => {
       setCurrentRoom(response.room)
       setCurrentParticipant(response.participant)
       setSessionToken(response.sessionToken)
+      addRoom(response.room, response.participant, response.sessionToken)
 
       toast.success(t('room.create.success'))
       navigate(`/${language}/room/${response.room.id}`)
@@ -97,6 +100,7 @@ const HomePage = () => {
       setCurrentRoom(response.room)
       setCurrentParticipant(response.participant)
       setSessionToken(response.sessionToken)
+      addRoom(response.room, response.participant, response.sessionToken)
 
       toast.success(t('room.join.success'))
       navigate(`/${language}/room/${response.room.id}`)
@@ -147,10 +151,15 @@ const HomePage = () => {
             </p>
           </div>
 
-          {/* Main Form */}
-          <div className="max-w-md mx-auto">
-            <div className="card animate-fade-in">
-              {/* Tabs */}
+          {/* Main Content */}
+          {!showRoomForm && rooms.length > 0 ? (
+            <div className="max-w-6xl mx-auto">
+              <RoomSelector onCreateNew={() => setShowRoomForm(true)} />
+            </div>
+          ) : (
+            <div className="max-w-md mx-auto">
+              <div className="card animate-fade-in">
+                {/* Tabs */}
               <div className="card-header">
                 <div className="flex space-x-1 bg-neutral-100 p-1 rounded-lg">
                   <button
@@ -270,6 +279,7 @@ const HomePage = () => {
               </div>
             </div>
           </div>
+          )}
         </div>
       </div>
 
