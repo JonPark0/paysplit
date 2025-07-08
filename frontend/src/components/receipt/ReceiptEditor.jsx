@@ -209,10 +209,20 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
                   <Input
                     label={index === 0 ? t('receipt.edit.itemPrice') : ''}
                     type="number"
+                    min="0"
+                    max="9999999"
+                    step="1"
                     placeholder="0"
                     value={item.price}
-                    onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      // Prevent negative values
+                      if (value === '' || (!isNaN(value) && parseFloat(value) >= 0)) {
+                        handleItemChange(index, 'price', value)
+                      }
+                    }}
                     error={errors[`item_${index}`]?.price}
+                    className="tabular-nums"
                     fullWidth
                   />
                 </div>
@@ -223,10 +233,19 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
                     label={index === 0 ? t('receipt.edit.quantity') : ''}
                     type="number"
                     min="1"
+                    max="999"
+                    step="1"
                     placeholder="1"
                     value={item.quantity}
-                    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      // Prevent negative values and zero
+                      if (value === '' || (!isNaN(value) && parseInt(value) >= 1)) {
+                        handleItemChange(index, 'quantity', value)
+                      }
+                    }}
                     error={errors[`item_${index}`]?.quantity}
+                    className="tabular-nums"
                     fullWidth
                   />
                 </div>

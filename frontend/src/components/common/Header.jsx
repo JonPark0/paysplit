@@ -88,10 +88,10 @@ const Header = () => {
             {currentRoom && (
               <button
                 onClick={() => navigate(`/${language}/room/${currentRoom.id}`)}
-                className="ml-4 pl-4 border-l border-neutral-200 hidden sm:block hover:bg-neutral-50 rounded-md px-3 py-2 transition-colors"
-                title={t('room.info.clickToEnter')}
+                className="ml-4 pl-4 border-l border-neutral-200 hidden sm:block hover:bg-neutral-50 rounded-md px-3 py-2 transition-colors max-w-xs"
+                title={currentRoom.name || t('room.info.entryCode') + ': ' + currentRoom.entryCode}
               >
-                <div className="text-sm text-neutral-600">
+                <div className="text-sm text-neutral-600 truncate">
                   {currentRoom.name || t('room.info.entryCode') + ': ' + currentRoom.entryCode}
                 </div>
                 {currentParticipant && (
@@ -224,9 +224,9 @@ const Header = () => {
                   setIsMenuOpen(false)
                 }}
                 className="w-full px-3 py-2 border-b border-neutral-100 mb-2 text-left hover:bg-neutral-50 rounded-md transition-colors"
-                title={t('room.info.clickToEnter')}
+                title={currentRoom.name || t('room.info.entryCode') + ': ' + currentRoom.entryCode}
               >
-                <div className="text-sm font-medium text-neutral-900">
+                <div className="text-sm font-medium text-neutral-900 truncate">
                   {currentRoom.name || t('room.info.entryCode') + ': ' + currentRoom.entryCode}
                 </div>
                 {currentParticipant && (

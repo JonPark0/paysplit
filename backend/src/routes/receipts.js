@@ -11,10 +11,55 @@ import Room from '../models/Room.js'
 
 const router = express.Router()
 
+// Fix filename encoding issues (commonly caused by EUC_KR encoded filenames)
+function fixFilenameEncoding(filename) {
+  try {
+    // Check if the filename contains corrupted characters (often happens with EUC_KR)
+    const hasKoreanCorruption = /[\u00C0-\u00FF\u0080-\u00BF]/.test(filename)
+    
+    if (hasKoreanCorruption) {
+      // Try to recover Korean characters by treating as UTF-8 bytes
+      const buffer = Buffer.from(filename, 'latin1')
+      const decoded = buffer.toString('utf8')
+      
+      // Check if the decoding produced valid Korean characters
+      if (/[\u3131-\u3163\uAC00-\uD7AF]/.test(decoded)) {
+        return decoded
+      }
+      
+      // Alternative approach: try to decode percent-encoded characters
+      try {
+        const percentDecoded = decodeURIComponent(escape(filename))
+        if (/[\u3131-\u3163\uAC00-\uD7AF]/.test(percentDecoded)) {
+          return percentDecoded
+        }
+      } catch (e) {
+        // Ignore percent decode errors
+      }
+    }
+    
+    // If no corruption detected or decoding failed, return original
+    return filename
+  } catch (error) {
+    console.error('Filename encoding fix failed:', error)
+    return filename
+  }
+}
+
 export default function(db) {
   const receiptModel = new Receipt(db)
   const roomModel = new Room(db)
   const activityLogger = new ActivityLogger(db)
+
+  // Check if room has active settlements
+  const checkActiveSettlements = async (roomId) => {
+    const activeSettlements = await db.all(`
+      SELECT COUNT(*) as count FROM settlements 
+      WHERE room_id = ? AND status = 'pending'
+    `, [roomId])
+    
+    return activeSettlements[0].count > 0
+  }
 
   // Upload and process receipt
   router.post('/upload/:roomId',
@@ -30,10 +75,13 @@ export default function(db) {
       }
 
       try {
+        // Fix filename encoding issues (EUC_KR to UTF-8)
+        const fixedFilename = fixFilenameEncoding(req.file.originalname)
+        
         // Process and encrypt the uploaded file
         const processedFile = await ImageProcessor.processImage(
           req.file.buffer,
-          req.file.originalname,
+          fixedFilename,
           req.file.mimetype
         )
 
@@ -80,6 +128,15 @@ export default function(db) {
       const { roomId } = req.params
       const { participant } = req
       const { totalAmount, currency, payerId, items, encryptedFilename, originalFilename } = req.body
+
+      // Check if settlements are in progress
+      const hasActiveSettlements = await checkActiveSettlements(roomId)
+      if (hasActiveSettlements) {
+        return res.status(409).json({
+          error: 'Receipt modification not allowed',
+          message: 'Cannot add receipts while settlements are in progress. Please complete or cancel settlements first.'
+        })
+      }
 
       // Validate that total amount matches sum of items
       const calculatedTotal = items.reduce((sum, item) => 
@@ -241,6 +298,15 @@ export default function(db) {
       // Only uploader or admin can delete
       if (receipt.uploaderId !== participant.id && !participant.isAdmin) {
         return res.status(403).json({ error: 'Only uploader or admin can delete receipt' })
+      }
+
+      // Check if settlements are in progress
+      const hasActiveSettlements = await checkActiveSettlements(roomId)
+      if (hasActiveSettlements) {
+        return res.status(409).json({
+          error: 'Receipt modification not allowed',
+          message: 'Cannot delete receipts while settlements are in progress. Please complete or cancel settlements first.'
+        })
       }
 
       // Delete encrypted file if exists

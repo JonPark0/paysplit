@@ -98,11 +98,11 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
           setUploadStep('review')
         }
       } else {
-        // For PDF files, skip OCR for now
+        // For PDF files, skip OCR and proceed to manual entry
         setOcrResult({
-          items: [],
+          items: [{ name: '', price: 0, quantity: 1, category: 'other' }],
           total: 0,
-          validation: { isValid: false, issues: ['PDF processing not supported'], score: 0 }
+          validation: { isValid: true, issues: ['PDF file uploaded successfully - manual entry required'], score: 100 }
         })
         setUploadStep('review')
       }
@@ -116,12 +116,22 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
 
   // Handle manual entry
   const handleManualEntry = () => {
-    setOcrResult({
+    // Create manual entry data and skip review step
+    const manualData = {
+      file: null,  // No file for manual entry
+      ocrResult: {
+        items: [{ name: '', price: 0, quantity: 1, category: 'other' }],
+        total: 0,
+        validation: { isValid: true, issues: [], score: 100 }
+      },
       items: [{ name: '', price: 0, quantity: 1, category: 'other' }],
-      total: 0,
-      validation: { isValid: true, issues: [], score: 100 }
-    })
-    setUploadStep('review')
+      total: 0
+    }
+    
+    // Skip review step and go directly to editing
+    if (onSuccess) {
+      onSuccess(manualData)
+    }
   }
 
   // Handle OCR retry

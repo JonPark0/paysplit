@@ -136,7 +136,7 @@
       "camera": "Take Photo",
       "file": "Select File",
       "manual": "Manual Entry",
-      "supportedFormats": "Supported formats: JPG, PNG, PDF (max 10MB)",
+      "supportedFormats": "Supported formats: JPG, PNG, WEBP, PDF (max 10MB)",
       "processing": "Processing...",
       "ocrFailed": "OCR processing failed. Please try another method.",
       "retry": "Retry",

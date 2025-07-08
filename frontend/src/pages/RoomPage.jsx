@@ -139,6 +139,12 @@ const RoomPage = () => {
   }
 
   const handleAddReceipt = () => {
+    // Check if settlements are active
+    if (currentRoom?.settlementStatus === 'settling') {
+      toast.error('정산이 진행 중일 때는 영수증을 추가할 수 없습니다. 정산을 완료하거나 취소해주세요.')
+      return
+    }
+    
     setShowReceiptUpload(true)
   }
 
@@ -156,6 +162,12 @@ const RoomPage = () => {
   }
 
   const handleEditReceipt = (receipt) => {
+    // Check if settlements are active
+    if (currentRoom?.settlementStatus === 'settling') {
+      toast.error('정산이 진행 중일 때는 영수증을 수정할 수 없습니다. 정산을 완료하거나 취소해주세요.')
+      return
+    }
+    
     setSelectedReceipt(receipt)
     setShowReceiptEdit(true)
   }
@@ -294,6 +306,8 @@ const RoomPage = () => {
                   <Button
                     onClick={handleAddReceipt}
                     leftIcon={<Plus className="w-4 h-4" />}
+                    disabled={currentRoom?.settlementStatus === 'settling'}
+                    title={currentRoom?.settlementStatus === 'settling' ? '정산 진행 중에는 영수증을 추가할 수 없습니다' : ''}
                   >
                     {t('receipt.upload.title')}
                   </Button>
@@ -309,7 +323,11 @@ const RoomPage = () => {
                     <p className="text-neutral-600 mb-6">
                       {t('receipt.empty.description')}
                     </p>
-                    <Button onClick={handleAddReceipt}>
+                    <Button 
+                      onClick={handleAddReceipt}
+                      disabled={currentRoom?.settlementStatus === 'settling'}
+                      title={currentRoom?.settlementStatus === 'settling' ? '정산 진행 중에는 영수증을 추가할 수 없습니다' : ''}
+                    >
                       {t('receipt.upload.title')}
                     </Button>
                   </div>
@@ -336,6 +354,8 @@ const RoomPage = () => {
                             size="sm" 
                             variant="outline"
                             onClick={() => handleEditReceipt(receipt)}
+                            disabled={currentRoom?.settlementStatus === 'settling'}
+                            title={currentRoom?.settlementStatus === 'settling' ? '정산 진행 중에는 영수증을 수정할 수 없습니다' : ''}
                           >
                             {t('common.edit')}
                           </Button>

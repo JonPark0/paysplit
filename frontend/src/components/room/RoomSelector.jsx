@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Clock, Users, Receipt, ArrowRight, Search, X } from 'lucide-react'
+import { Clock, Users, Receipt, ArrowRight, Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 import Button from '../common/Button'
@@ -17,7 +17,8 @@ const RoomSelector = ({ onCreateNew }) => {
   const { rooms, lastAccessedRooms, switchToRoom, removeRoom, getRecentRooms } = useRoomStore()
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [showAllRooms, setShowAllRooms] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const roomsPerPage = 6
 
   // Filter rooms based on search query
   const filteredRooms = rooms.filter(room => 
@@ -28,6 +29,19 @@ const RoomSelector = ({ onCreateNew }) => {
 
   // Get recent rooms for quick access
   const recentRooms = getRecentRooms()
+
+  // Pagination logic
+  const roomsToShow = searchQuery ? filteredRooms : rooms
+  const totalPages = Math.ceil(roomsToShow.length / roomsPerPage)
+  const startIndex = (currentPage - 1) * roomsPerPage
+  const endIndex = startIndex + roomsPerPage
+  const currentRooms = roomsToShow.slice(startIndex, endIndex)
+
+  // Reset page when search changes
+  const handleSearchChange = (value) => {
+    setSearchQuery(value)
+    setCurrentPage(1)
+  }
 
   // Handle room selection
   const handleRoomSelect = (roomId) => {
@@ -56,8 +70,8 @@ const RoomSelector = ({ onCreateNew }) => {
       onClick={() => handleRoomSelect(room.id)}
     >
       <div className="flex justify-between items-start mb-3">
-        <div className="flex-1">
-          <h3 className="font-medium text-neutral-900 group-hover:text-primary-600 transition-colors">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-neutral-900 group-hover:text-primary-600 transition-colors truncate">
             {room.name || `방 ${room.entryCode}`}
           </h3>
           <p className="text-sm text-neutral-500 mt-1">
@@ -141,7 +155,7 @@ const RoomSelector = ({ onCreateNew }) => {
         <Input
           placeholder="방 이름이나 입장 코드로 검색..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="pl-10"
           fullWidth
         />
@@ -167,34 +181,65 @@ const RoomSelector = ({ onCreateNew }) => {
           <h3 className="text-lg font-medium text-neutral-900">
             {searchQuery ? '검색 결과' : '모든 방'}
             <span className="ml-2 text-sm font-normal text-neutral-500">
-              ({searchQuery ? filteredRooms.length : rooms.length}개)
+              ({roomsToShow.length}개)
             </span>
           </h3>
-          {!searchQuery && rooms.length > 6 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAllRooms(!showAllRooms)}
-            >
-              {showAllRooms ? '접기' : '모두 보기'}
-            </Button>
+          {totalPages > 1 && (
+            <div className="text-sm text-neutral-500">
+              페이지 {currentPage} / {totalPages}
+            </div>
           )}
         </div>
 
-        {(searchQuery ? filteredRooms : rooms).length === 0 ? (
+        {roomsToShow.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-neutral-600">
               {searchQuery ? '검색 결과가 없습니다' : '방이 없습니다'}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(searchQuery ? filteredRooms : rooms)
-              .slice(0, showAllRooms || searchQuery ? undefined : 6)
-              .map(room => (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {currentRooms.map(room => (
                 <RoomCard key={room.id} room={room} />
               ))}
-          </div>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-8 space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "primary" : "ghost"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                    className={currentPage === page ? "min-w-[2rem]" : "min-w-[2rem]"}
+                  >
+                    {page}
+                  </Button>
+                ))}
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
