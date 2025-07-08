@@ -39,9 +39,17 @@ export default function(db) {
       
       // Validate the splits
       for (const split of splitsToCreate) {
-        if (!split.itemId || !split.participantId || !split.amount) {
+        if (!split.itemId || !split.participantId || split.amount === undefined || split.amount === null) {
+          console.log('Invalid split data received:', JSON.stringify(split, null, 2))
+          console.log('Request body:', JSON.stringify(req.body, null, 2))
           return res.status(400).json({ 
-            error: 'Each split must have itemId, participantId, and amount' 
+            error: 'Each split must have itemId, participantId, and amount',
+            received: split,
+            missing: {
+              itemId: !split.itemId,
+              participantId: !split.participantId,
+              amount: split.amount === undefined || split.amount === null
+            }
           })
         }
       }
