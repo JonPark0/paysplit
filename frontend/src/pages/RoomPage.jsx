@@ -18,7 +18,7 @@ import Button from '../components/common/Button'
 import { SplitManager } from '../components/split'
 import { Settlement } from '../components/settlement'
 import { ReceiptUpload, ReceiptEditor } from '../components/receipt'
-import { ShareModal, Settings } from '../components/room'
+import { ShareModal, Settings as SettingsModal } from '../components/room'
 import { useRoomStore } from '../stores/roomStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { roomAPI, receiptAPI, settlementAPI } from '../services/api'
@@ -444,7 +444,7 @@ const RoomPage = () => {
 
       {/* Settings Modal */}
       {showSettings && (
-        <Settings
+        <SettingsModal
           roomId={roomId}
           onClose={() => setShowSettings(false)}
         />
