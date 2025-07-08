@@ -14,61 +14,97 @@ export default function(db) {
   const roomModel = new Room(db)
   const activityLogger = new ActivityLogger(db)
 
-  // Create split for an item
+  // Create split for an item (flexible endpoint)
   router.post('/:roomId/splits',
     checkRoomAccess(db),
     sanitizeBody,
-    validate(splitSchemas.create),
     asyncHandler(async (req, res) => {
       const { roomId } = req.params
       const { participant } = req
-      const { itemId, participantId, amount } = req.body
-
-      // Verify the item belongs to the room
-      const item = await db.get(`
-        SELECT ri.*, r.room_id 
-        FROM receipt_items ri
-        JOIN receipts r ON ri.receipt_id = r.id
-        WHERE ri.id = ?
-      `, [itemId])
-
-      if (!item || item.room_id !== roomId) {
-        return res.status(404).json({ error: 'Item not found or does not belong to this room' })
+      
+      // Handle both single split and bulk split formats
+      let splitsToCreate = []
+      
+      if (req.body.splits && Array.isArray(req.body.splits)) {
+        // Bulk format: { splits: [...] }
+        splitsToCreate = req.body.splits
+      } else if (req.body.itemId && req.body.participantId && req.body.amount) {
+        // Single format: { itemId, participantId, amount }
+        splitsToCreate = [req.body]
+      } else {
+        return res.status(400).json({ 
+          error: 'Invalid request format. Expected either single split (itemId, participantId, amount) or bulk splits (splits array)' 
+        })
+      }
+      
+      // Validate the splits
+      for (const split of splitsToCreate) {
+        if (!split.itemId || !split.participantId || !split.amount) {
+          return res.status(400).json({ 
+            error: 'Each split must have itemId, participantId, and amount' 
+          })
+        }
       }
 
-      // Verify the participant belongs to the room
-      const targetParticipant = await db.get(`
-        SELECT * FROM participants WHERE id = ? AND room_id = ?
-      `, [participantId, roomId])
+      // Validate all items and participants belong to the room
+      for (const split of splitsToCreate) {
+        const item = await db.get(`
+          SELECT ri.*, r.room_id 
+          FROM receipt_items ri
+          JOIN receipts r ON ri.receipt_id = r.id
+          WHERE ri.id = ?
+        `, [split.itemId])
 
-      if (!targetParticipant) {
-        return res.status(404).json({ error: 'Participant not found in this room' })
+        if (!item || item.room_id !== roomId) {
+          return res.status(400).json({ 
+            error: `Item ${split.itemId} not found or does not belong to this room` 
+          })
+        }
+
+        const targetParticipant = await db.get(`
+          SELECT * FROM participants WHERE id = ? AND room_id = ?
+        `, [split.participantId, roomId])
+
+        if (!targetParticipant) {
+          return res.status(400).json({ 
+            error: `Participant ${split.participantId} not found in this room` 
+          })
+        }
       }
 
-      // Create split
-      const split = await settlementModel.createSplit({
-        itemId,
-        participantId,
-        amount
-      })
+      // Create all splits
+      const createdSplits = []
+      for (const split of splitsToCreate) {
+        const createdSplit = await settlementModel.createSplit({
+          itemId: split.itemId,
+          participantId: split.participantId,
+          amount: split.amount
+        })
+        createdSplits.push(createdSplit)
+
+        // Log activity for each split
+        await activityLogger.logActivity(
+          roomId,
+          participant.id,
+          'split_created',
+          {
+            splitId: createdSplit.id,
+            itemId: split.itemId,
+            participantId: split.participantId,
+            amount: split.amount
+          }
+        )
+      }
 
       // Update room activity
       await roomModel.updateLastActivity(roomId)
 
-      // Log activity
-      await activityLogger.logActivity(
-        roomId,
-        participant.id,
-        'split_created',
-        {
-          splitId: split.id,
-          itemId,
-          participantId,
-          amount
-        }
-      )
-
-      res.status(201).json({ split })
+      // Return appropriate response format
+      if (splitsToCreate.length === 1) {
+        res.status(201).json({ split: createdSplits[0] })
+      } else {
+        res.status(201).json({ splits: createdSplits })
+      }
     })
   )
 
