@@ -349,21 +349,10 @@ export default function(db) {
         roomModel.findById(roomId),
         db.all('SELECT id, name, is_admin, created_at FROM participants WHERE room_id = ?', [roomId]),
         db.all(`
-          SELECT r.*, p.name as uploader_name,
-                 GROUP_CONCAT(
-                   json_object(
-                     'id', ri.id,
-                     'name', ri.name,
-                     'price', ri.price,
-                     'quantity', ri.quantity,
-                     'category', ri.category
-                   )
-                 ) as items
+          SELECT r.*, p.name as uploader_name
           FROM receipts r
           LEFT JOIN participants p ON r.uploader_id = p.id
-          LEFT JOIN receipt_items ri ON r.id = ri.receipt_id
           WHERE r.room_id = ?
-          GROUP BY r.id
           ORDER BY r.created_at DESC
         `, [roomId]),
         db.all(`
@@ -379,19 +368,42 @@ export default function(db) {
         activityLogger.getRoomActivities(roomId, 1000)
       ])
 
+      // Get receipt items for all receipts
+      const receiptItems = await db.all(`
+        SELECT ri.*
+        FROM receipt_items ri
+        JOIN receipts r ON ri.receipt_id = r.id
+        WHERE r.room_id = ?
+      `, [roomId])
+
+      // Group items by receipt
+      const itemsByReceipt = receiptItems.reduce((acc, item) => {
+        if (!acc[item.receipt_id]) {
+          acc[item.receipt_id] = []
+        }
+        acc[item.receipt_id].push({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          category: item.category
+        })
+        return acc
+      }, {})
+
       const archiveData = {
         room: {
           id: room.id,
           name: room.name,
           entryCode: room.entryCode,
           language: room.language,
-          status: room.status,
+          status: room.settlement_status,
           createdAt: room.createdAt
         },
         participants,
         receipts: receipts.map(r => ({
           ...r,
-          items: r.items ? JSON.parse(`[${r.items}]`) : []
+          items: itemsByReceipt[r.id] || []
         })),
         settlements,
         activities,
@@ -407,7 +419,7 @@ export default function(db) {
             totalParticipants: participants.length,
             totalReceipts: receipts.length,
             totalAmount: archiveData.totalReceiptAmount,
-            settlementStatus: room.status
+            settlementStatus: room.settlement_status
           },
           finalBalances: participants.map(p => {
             const paid = receipts
