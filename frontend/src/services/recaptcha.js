@@ -67,7 +67,7 @@ class RecaptchaService {
 
       script.onerror = () => {
         this.isLoading = false
-        console.error('Failed to load reCAPTCHA script')
+        console.error('Failed to load reCAPTCHA script - this may be due to CSP policy or network issues')
         reject(new Error('Failed to load reCAPTCHA'))
       }
 

@@ -22,14 +22,14 @@ export const roomSchemas = {
     adminName: Joi.string().min(1).max(50).required(),
     password: Joi.string().min(4).max(100).required(),
     language: Joi.string().valid('ko', 'en').default('ko'),
-    recaptchaToken: Joi.string().optional()
+    recaptchaToken: Joi.string().allow(null).optional()
   }),
 
   join: Joi.object({
     entryCode: Joi.string().pattern(/^\d{6}$/).required(),
     participantName: Joi.string().min(1).max(50).required(),
     password: Joi.string().min(4).max(100).required(),
-    recaptchaToken: Joi.string().optional()
+    recaptchaToken: Joi.string().allow(null).optional()
   }),
 
   updateStatus: Joi.object({
@@ -45,7 +45,7 @@ export const receiptSchemas = {
     payerId: Joi.string().optional(),
     encryptedFilename: Joi.string().optional(),
     originalFilename: Joi.string().optional(),
-    recaptchaToken: Joi.string().optional(),
+    recaptchaToken: Joi.string().allow(null).optional(),
     items: Joi.array().items(
       Joi.object({
         name: Joi.string().min(1).max(100).required(),
