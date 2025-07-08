@@ -59,9 +59,13 @@ const Header = () => {
               <span className="text-xl font-bold">PaySplit</span>
             </button>
             
-            {/* Room info */}
-            {isRoomPage && currentRoom && (
-              <div className="ml-4 pl-4 border-l border-neutral-200 hidden sm:block">
+            {/* Room info - clickable to return to room */}
+            {currentRoom && (
+              <button
+                onClick={() => navigate(`/${language}/room/${currentRoom.id}`)}
+                className="ml-4 pl-4 border-l border-neutral-200 hidden sm:block hover:bg-neutral-50 rounded-md px-3 py-2 transition-colors"
+                title={t('room.info.clickToEnter')}
+              >
                 <div className="text-sm text-neutral-600">
                   {currentRoom.name || t('room.info.entryCode') + ': ' + currentRoom.entryCode}
                 </div>
@@ -73,7 +77,7 @@ const Header = () => {
                     )}
                   </div>
                 )}
-              </div>
+              </button>
             )}
           </div>
 
@@ -112,7 +116,7 @@ const Header = () => {
             >
               <Globe className="w-5 h-5" />
               <span className="ml-1 text-sm">
-                {language.toUpperCase()}
+                {language === 'ko' ? 'EN' : 'KO'}
               </span>
             </button>
           </div>
@@ -137,9 +141,16 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-b border-neutral-200">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            {/* Room info mobile */}
-            {isRoomPage && currentRoom && (
-              <div className="px-3 py-2 border-b border-neutral-100 mb-2">
+            {/* Room info mobile - clickable to return to room */}
+            {currentRoom && (
+              <button
+                onClick={() => {
+                  navigate(`/${language}/room/${currentRoom.id}`)
+                  setIsMenuOpen(false)
+                }}
+                className="w-full px-3 py-2 border-b border-neutral-100 mb-2 text-left hover:bg-neutral-50 rounded-md transition-colors"
+                title={t('room.info.clickToEnter')}
+              >
                 <div className="text-sm font-medium text-neutral-900">
                   {currentRoom.name || t('room.info.entryCode') + ': ' + currentRoom.entryCode}
                 </div>
@@ -151,7 +162,7 @@ const Header = () => {
                     )}
                   </div>
                 )}
-              </div>
+              </button>
             )}
 
             {isRoomPage ? (
@@ -186,7 +197,7 @@ const Header = () => {
               className="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 rounded-md"
             >
               <Globe className="w-4 h-4 mr-3" />
-              {t('navigation.language')} ({language.toUpperCase()})
+              {t('navigation.language')} ({language === 'ko' ? 'EN' : 'KO'})
             </button>
           </div>
         </div>

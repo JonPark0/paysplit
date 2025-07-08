@@ -23,7 +23,8 @@
     "settings": "Settings",
     "backToRoom": "Back to Room",
     "settlementManagement": "Settlement Management",
-    "recalculate": "Recalculate"
+    "recalculate": "Recalculate",
+    "me": "Me"
   },
   "navigation": {
     "home": "Home",
@@ -43,6 +44,8 @@
     "createRoom": "Create Room",
     "joinRoom": "Join Room",
     "features": {
+      "title": "Key Features",
+      "subtitle": "PaySplit makes bill splitting simple, fast, and transparent",
       "ocr": {
         "title": "Receipt Scanning",
         "description": "Take a photo of your receipt and automatically recognize items"
@@ -54,6 +57,27 @@
       "secure": {
         "title": "Secure",
         "description": "All data is encrypted and stored securely"
+      }
+    },
+    "help": {
+      "title": "How it works",
+      "steps": {
+        "create": {
+          "title": "Create or Join",
+          "description": "Create a new room or join with an entry code"
+        },
+        "upload": {
+          "title": "Upload Receipt",
+          "description": "Take a photo or upload your receipt"
+        },
+        "split": {
+          "title": "Split Costs",
+          "description": "Choose how to split each item"
+        },
+        "settle": {
+          "title": "Settle Up",
+          "description": "See who owes what and settle"
+        }
       }
     }
   },
@@ -88,7 +112,8 @@
       "totalAmount": "Total Amount",
       "status": "Status",
       "created": "Created",
-      "lastActivity": "Last Activity"
+      "lastActivity": "Last Activity",
+      "clickToEnter": "Click to enter room"
     },
     "share": {
       "title": "Share Room",
@@ -127,7 +152,9 @@
       "total": "Total",
       "calculated": "Calculated Total",
       "difference": "Difference",
-      "saveChanges": "Save Changes"
+      "saveChanges": "Save Changes",
+      "selectPayer": "Select Payer",
+      "payerRequired": "Please select a payer"
     },
     "title": "Receipts",
     "item": {

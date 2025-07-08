@@ -77,7 +77,7 @@ export default function(db) {
     asyncHandler(async (req, res) => {
       const { roomId } = req.params
       const { participant } = req
-      const { totalAmount, currency, items, encryptedFilename, originalFilename } = req.body
+      const { totalAmount, currency, payerId, items, encryptedFilename, originalFilename } = req.body
 
       // Validate that total amount matches sum of items
       const calculatedTotal = items.reduce((sum, item) => 
@@ -95,6 +95,7 @@ export default function(db) {
       const receipt = await receiptModel.create({
         roomId,
         uploaderId: participant.id,
+        payerId: payerId || participant.id,
         originalFilename: originalFilename || null,
         encryptedFilename: encryptedFilename || null,
         totalAmount,

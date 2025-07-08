@@ -9,6 +9,7 @@ class Receipt {
         const {
             roomId,
             uploaderId,
+            payerId,
             originalFilename,
             encryptedFilename,
             totalAmount,
@@ -18,11 +19,13 @@ class Receipt {
 
         const receiptId = uuidv4();
 
-        // Create receipt
+        // Create receipt - if no payer specified, default to uploader
+        const actualPayerId = payerId || uploaderId;
+        
         await this.db.run(`
-            INSERT INTO receipts (id, room_id, uploader_id, original_filename, encrypted_filename, total_amount, currency)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [receiptId, roomId, uploaderId, originalFilename, encryptedFilename, totalAmount, currency]);
+            INSERT INTO receipts (id, room_id, uploader_id, payer_id, original_filename, encrypted_filename, total_amount, currency)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [receiptId, roomId, uploaderId, actualPayerId, originalFilename, encryptedFilename, totalAmount, currency]);
 
         // Create receipt items
         const createdItems = [];
@@ -47,6 +50,7 @@ class Receipt {
             id: receiptId,
             roomId,
             uploaderId,
+            payerId: actualPayerId,
             originalFilename,
             encryptedFilename,
             totalAmount,
@@ -71,6 +75,7 @@ class Receipt {
             id: receipt.id,
             roomId: receipt.room_id,
             uploaderId: receipt.uploader_id,
+            payerId: receipt.payer_id,
             originalFilename: receipt.original_filename,
             encryptedFilename: receipt.encrypted_filename,
             totalAmount: receipt.total_amount,
@@ -91,9 +96,11 @@ class Receipt {
         const receipts = await this.db.all(`
             SELECT 
                 r.*,
-                p.name as uploader_name
+                up.name as uploader_name,
+                pp.name as payer_name
             FROM receipts r
-            JOIN participants p ON r.uploader_id = p.id
+            JOIN participants up ON r.uploader_id = up.id
+            LEFT JOIN participants pp ON r.payer_id = pp.id
             WHERE r.room_id = ?
             ORDER BY r.created_at DESC
         `, [roomId]);
@@ -109,6 +116,8 @@ class Receipt {
                 roomId: receipt.room_id,
                 uploaderId: receipt.uploader_id,
                 uploaderName: receipt.uploader_name,
+                payerId: receipt.payer_id,
+                payerName: receipt.payer_name,
                 originalFilename: receipt.original_filename,
                 encryptedFilename: receipt.encrypted_filename,
                 totalAmount: receipt.total_amount,

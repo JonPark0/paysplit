@@ -40,6 +40,7 @@ export const receiptSchemas = {
   create: Joi.object({
     totalAmount: Joi.number().positive().required(),
     currency: Joi.string().default('KRW'),
+    payerId: Joi.string().optional(),
     encryptedFilename: Joi.string().optional(),
     originalFilename: Joi.string().optional(),
     items: Joi.array().items(

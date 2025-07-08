@@ -281,7 +281,7 @@ const HomePage = () => {
               {t('navigation.features')}
             </h2>
             <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              PaySplit makes bill splitting simple, fast, and transparent
+              {t('home.features.subtitle')}
             </p>
           </div>
 
@@ -332,7 +332,7 @@ const HomePage = () => {
       <div id="help" className="py-24 bg-neutral-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 mb-8">
-            How it works
+            {t('home.help.title')}
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -340,32 +340,32 @@ const HomePage = () => {
               <div className="w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 1
               </div>
-              <h3 className="font-semibold text-neutral-900 mb-2">Create or Join</h3>
-              <p className="text-sm text-neutral-600">Create a new room or join with an entry code</p>
+              <h3 className="font-semibold text-neutral-900 mb-2">{t('home.help.steps.create.title')}</h3>
+              <p className="text-sm text-neutral-600">{t('home.help.steps.create.description')}</p>
             </div>
             
             <div className="text-center">
               <div className="w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 2
               </div>
-              <h3 className="font-semibold text-neutral-900 mb-2">Upload Receipt</h3>
-              <p className="text-sm text-neutral-600">Take a photo or upload your receipt</p>
+              <h3 className="font-semibold text-neutral-900 mb-2">{t('home.help.steps.upload.title')}</h3>
+              <p className="text-sm text-neutral-600">{t('home.help.steps.upload.description')}</p>
             </div>
             
             <div className="text-center">
               <div className="w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 3
               </div>
-              <h3 className="font-semibold text-neutral-900 mb-2">Split Costs</h3>
-              <p className="text-sm text-neutral-600">Choose how to split each item</p>
+              <h3 className="font-semibold text-neutral-900 mb-2">{t('home.help.steps.split.title')}</h3>
+              <p className="text-sm text-neutral-600">{t('home.help.steps.split.description')}</p>
             </div>
             
             <div className="text-center">
               <div className="w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 4
               </div>
-              <h3 className="font-semibold text-neutral-900 mb-2">Settle Up</h3>
-              <p className="text-sm text-neutral-600">See who owes what and settle</p>
+              <h3 className="font-semibold text-neutral-900 mb-2">{t('home.help.steps.settle.title')}</h3>
+              <p className="text-sm text-neutral-600">{t('home.help.steps.settle.description')}</p>
             </div>
           </div>
         </div>

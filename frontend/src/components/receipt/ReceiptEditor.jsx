@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Trash2, Save, X, AlertCircle } from 'lucide-react'
+import { Plus, Trash2, Save, X, AlertCircle, User } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 import Button from '../common/Button'
@@ -8,14 +8,17 @@ import Input from '../common/Input'
 import { receiptAPI } from '../../services/api'
 import { formatCurrency, validateAmount } from '../../utils/currency'
 import { validateReceiptItem } from '../../utils/validation'
+import { useRoomStore } from '../../stores/roomStore'
 
 const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
   const { t } = useTranslation()
+  const { participants, currentParticipant } = useRoomStore()
 
   const [receiptData, setReceiptData] = useState({
     items: uploadData?.items || [{ name: '', price: 0, quantity: 1, category: 'other' }],
     total: uploadData?.total || 0,
-    currency: 'KRW'
+    currency: 'KRW',
+    payerId: currentParticipant?.id || null
   })
 
   const [errors, setErrors] = useState({})
@@ -98,6 +101,11 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
       newErrors.total = t('validation.positiveNumber', { field: 'Total' })
     }
 
+    // Validate payer selection
+    if (!receiptData.payerId) {
+      newErrors.payer = t('receipt.edit.payerRequired')
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -114,6 +122,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
       const receiptData_to_save = {
         totalAmount: receiptData.total,
         currency: receiptData.currency,
+        payerId: receiptData.payerId,
         items: receiptData.items.map(item => ({
           name: item.name.trim(),
           price: parseFloat(item.price),
@@ -256,6 +265,55 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
 
         {/* Summary */}
         <div className="space-y-6">
+          {/* Payer Selection */}
+          <div className="bg-white border border-neutral-200 rounded-lg p-6">
+            <h3 className="text-lg font-medium text-neutral-900 mb-4 flex items-center">
+              <User className="w-5 h-5 mr-2" />
+              {t('receipt.edit.selectPayer')}
+            </h3>
+            
+            <div className="space-y-2">
+              {participants.map((participant) => (
+                <label
+                  key={participant.id}
+                  className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
+                    receiptData.payerId === participant.id
+                      ? 'bg-primary-50 border-primary-200 text-primary-700'
+                      : 'bg-neutral-50 border-neutral-200 hover:bg-neutral-100'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payer"
+                    value={participant.id}
+                    checked={receiptData.payerId === participant.id}
+                    onChange={(e) => setReceiptData(prev => ({ ...prev, payerId: e.target.value }))}
+                    className="mr-3"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium">
+                      {participant.name}
+                      {participant.isAdmin && (
+                        <span className="ml-2 text-xs bg-primary-100 text-primary-600 px-2 py-1 rounded">
+                          {t('common.admin')}
+                        </span>
+                      )}
+                    </div>
+                    {participant.id === currentParticipant?.id && (
+                      <div className="text-xs text-neutral-500">{t('common.me')}</div>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+            
+            {errors.payer && (
+              <div className="mt-2 text-sm text-accent-600">
+                {errors.payer}
+              </div>
+            )}
+          </div>
+
           {/* Total Summary */}
           <div className="bg-white border border-neutral-200 rounded-lg p-6">
             <h3 className="text-lg font-medium text-neutral-900 mb-4">

@@ -133,9 +133,9 @@ const useRoomStore = create(
       getParticipantBalance: (participantId) => {
         const state = get()
         
-        // Calculate paid amount (receipts uploaded by participant)
+        // Calculate paid amount (receipts paid by participant)
         const paid = state.receipts
-          .filter(receipt => receipt.uploaderId === participantId)
+          .filter(receipt => (receipt.payerId || receipt.uploaderId) === participantId)
           .reduce((sum, receipt) => sum + receipt.totalAmount, 0)
 
         // Calculate owed amount (splits assigned to participant)

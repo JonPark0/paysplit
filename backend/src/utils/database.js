@@ -156,6 +156,13 @@ class Database {
                     CREATE INDEX IF NOT EXISTS idx_rooms_settlement_status ON rooms(settlement_status);
                     CREATE INDEX IF NOT EXISTS idx_rooms_last_activity ON rooms(last_activity);
                 `
+            },
+            {
+                name: '003_add_payer_to_receipts',
+                statements: [
+                    `ALTER TABLE receipts ADD COLUMN payer_id TEXT`,
+                    `CREATE INDEX IF NOT EXISTS idx_receipts_payer_id ON receipts(payer_id)`
+                ]
             }
         ];
 
