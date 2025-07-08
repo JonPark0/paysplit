@@ -28,25 +28,9 @@ const PORT = process.env.PORT || 3002
 // Initialize database
 const db = new Database(process.env.DATABASE_PATH || './database/paysplit.db')
 
-// Security middleware
+// Security middleware (disable CSP for backend API only)
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
-      styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
-      scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net"],
-      scriptSrcElem: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net"],
-      workerSrc: ["'self'", "blob:", "https://unpkg.com", "https://cdn.jsdelivr.net"],
-      childSrc: ["'self'", "blob:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:"],
-      connectSrc: ["'self'", "https:", "wss:", "https://unpkg.com", "https://cdn.jsdelivr.net"],
-      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-    },
-  },
+  contentSecurityPolicy: false, // CSP handled by frontend nginx
   crossOriginEmbedderPolicy: false
 }))
 
