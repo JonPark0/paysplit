@@ -1,4 +1,5 @@
 // Request logging middleware
+import { randomUUID } from 'crypto'
 
 export const requestLogger = (req, res, next) => {
   const start = Date.now()
@@ -31,7 +32,7 @@ export class ActivityLogger {
         INSERT INTO activity_logs (id, room_id, participant_id, action, details)
         VALUES (?, ?, ?, ?, ?)
       `, [
-        require('crypto').randomUUID(),
+        randomUUID(),
         roomId,
         participantId,
         action,
