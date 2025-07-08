@@ -303,10 +303,10 @@ const RoomPage = () => {
                   <div className="text-center py-12">
                     <ReceiptIcon className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-neutral-900 mb-2">
-                      No receipts yet
+                      {t('receipt.empty.title')}
                     </h3>
                     <p className="text-neutral-600 mb-6">
-                      Upload your first receipt to get started
+                      {t('receipt.empty.description')}
                     </p>
                     <Button onClick={handleAddReceipt}>
                       {t('receipt.upload.title')}

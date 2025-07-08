@@ -210,13 +210,13 @@ const SplitManager = ({ roomId, onBack }) => {
                 key={receipt.id}
                 className="border border-neutral-200 rounded-lg p-4 hover:border-primary-300 transition-colors"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
+                    <div className="flex items-center flex-wrap gap-2 mb-2">
                       <h4 className="font-medium text-neutral-900">
                         영수증 #{receipt.id}
                       </h4>
-                      <div className={`px-2 py-1 rounded text-xs ${
+                      <div className={`px-2 py-1 rounded text-xs flex-shrink-0 ${
                         receipt.hasSplit 
                           ? 'bg-secondary-100 text-secondary-700' 
                           : 'bg-neutral-100 text-neutral-700'
@@ -260,11 +260,11 @@ const SplitManager = ({ roomId, onBack }) => {
                     )}
                   </div>
 
-                  <div className="ml-4 flex flex-col space-y-2">
+                  <div className="flex flex-row sm:flex-col sm:ml-4 space-x-2 sm:space-x-0 sm:space-y-2">
                     <Button
                       onClick={() => handleReceiptSelect(receipt)}
                       size="sm"
-                      className="whitespace-nowrap"
+                      className="whitespace-nowrap flex-1 sm:flex-initial"
                     >
                       {receipt.hasSplit ? '분할 수정' : '분할하기'}
                     </Button>
@@ -274,7 +274,7 @@ const SplitManager = ({ roomId, onBack }) => {
                         onClick={() => setCurrentView('settlement')}
                         variant="outline"
                         size="sm"
-                        className="whitespace-nowrap"
+                        className="whitespace-nowrap flex-1 sm:flex-initial"
                       >
                         정산 보기
                       </Button>

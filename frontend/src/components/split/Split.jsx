@@ -185,14 +185,26 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
 
     setLoading(true)
     try {
+      // Transform participant-level splits into item-level splits expected by backend
+      const itemLevelSplits = []
+      
+      participants.forEach(participant => {
+        const participantSplitData = splitData[participant.id]
+        if (participantSplitData && participantSplitData.items) {
+          participantSplitData.items.forEach(item => {
+            if (item.quantity > 0) {
+              itemLevelSplits.push({
+                itemId: item.id,
+                participantId: participant.id,
+                amount: item.amount
+              })
+            }
+          })
+        }
+      })
+
       const splitRequest = {
-        receiptId: receipt.id,
-        splitType,
-        splits: participants.map(participant => ({
-          participantId: participant.id,
-          amount: calculateParticipantTotal(participant.id),
-          items: splitType === 'manual' ? [] : splitData[participant.id].items.filter(item => item.quantity > 0)
-        }))
+        splits: itemLevelSplits
       }
 
       await roomAPI.createSplit(roomId, splitRequest)

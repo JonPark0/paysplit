@@ -157,6 +157,10 @@
       "payerRequired": "결제자를 선택해주세요"
     },
     "title": "영수증",
+    "empty": {
+      "title": "영수증이 없습니다",
+      "description": "첫 번째 영수증을 업로드하여 시작하세요"
+    },
     "item": {
       "food": "음식",
       "drink": "음료",

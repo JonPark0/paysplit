@@ -157,6 +157,10 @@
       "payerRequired": "Please select a payer"
     },
     "title": "Receipts",
+    "empty": {
+      "title": "No receipts yet",
+      "description": "Upload your first receipt to get started"
+    },
     "item": {
       "food": "Food",
       "drink": "Drink",
