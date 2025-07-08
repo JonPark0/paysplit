@@ -10,69 +10,7 @@
   "start_url": "/",
   "lang": "ko-KR",
   "categories": ["finance", "utilities", "productivity"],
-  "icons": [
-    {
-      "src": "pwa-64x64.png",
-      "sizes": "64x64",
-      "type": "image/png"
-    },
-    {
-      "src": "pwa-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "pwa-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "maskable-icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "새 방 만들기",
-      "short_name": "방 만들기",
-      "description": "새로운 PaySplit 방을 만듭니다",
-      "url": "/ko?action=create",
-      "icons": [
-        {
-          "src": "pwa-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "방 참여하기",
-      "short_name": "방 참여",
-      "description": "기존 PaySplit 방에 참여합니다",
-      "url": "/ko?action=join",
-      "icons": [
-        {
-          "src": "pwa-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "screenshot-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "PaySplit 메인 화면"
-    },
-    {
-      "src": "screenshot-narrow.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "PaySplit 모바일 화면"
-    }
-  ]
+  "icons": [],
+  "shortcuts": [],
+  "screenshots": []
 }
