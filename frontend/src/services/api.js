@@ -59,6 +59,12 @@ export const roomAPI = {
     return response.data
   },
 
+  // Get room info (public, for join page)
+  getRoomInfo: async (roomId) => {
+    const response = await api.get(`/rooms/${roomId}/info`)
+    return response.data
+  },
+
   // Join existing room
   join: async (data) => {
     const response = await api.post('/rooms/join', data)
@@ -124,6 +130,22 @@ export const roomAPI = {
   // Mark settlement as paid
   markSettlementAsPaid: async (roomId, settlementId) => {
     const response = await api.patch(`/settlements/${roomId}/settlements/${settlementId}`, { status: 'completed' })
+    return response.data
+  },
+
+  // Get activity logs
+  getActivityLogs: async (roomId, limit = 50) => {
+    const response = await api.get(`/rooms/${roomId}/activities`, {
+      params: { limit }
+    })
+    return response.data
+  },
+
+  // Download archive
+  downloadArchive: async (roomId, format = 'json') => {
+    const response = await api.get(`/rooms/${roomId}/archive`, {
+      params: { format }
+    })
     return response.data
   },
 }

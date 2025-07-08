@@ -258,6 +258,39 @@ export default function(db) {
     })
   )
 
+  // Get room info (public, for join page)
+  router.get('/:roomId/info',
+    asyncHandler(async (req, res) => {
+      const { roomId } = req.params
+      
+      const room = await roomModel.findById(roomId)
+      if (!room) {
+        return res.status(404).json({ error: 'Room not found' })
+      }
+
+      // Get participant count
+      const participantCount = await db.get(`
+        SELECT COUNT(*) as count FROM participants WHERE room_id = ?
+      `, [roomId])
+
+      // Get total amount from receipts
+      const totalAmount = await db.get(`
+        SELECT COALESCE(SUM(total_amount), 0) as total FROM receipts WHERE room_id = ?
+      `, [roomId])
+
+      res.json({
+        room: {
+          id: room.id,
+          name: room.name,
+          language: room.language,
+          entryCode: room.entryCode,
+          participantCount: participantCount?.count || 0,
+          totalAmount: totalAmount?.total || 0
+        }
+      })
+    })
+  )
+
   // Generate QR code for room
   router.get('/:roomId/qr',
     checkRoomAccess(db),
@@ -265,7 +298,7 @@ export default function(db) {
       const { roomId } = req.params
       const room = await roomModel.findById(roomId)
       
-      const roomUrl = `${process.env.CORS_ORIGIN}/${room.language}/room/${roomId}`
+      const roomUrl = `${process.env.CORS_ORIGIN}/join/${roomId}`
       
       try {
         const qrCodeDataUrl = await QRCode.toDataURL(roomUrl, {
@@ -300,7 +333,102 @@ export default function(db) {
 
       const activities = await activityLogger.getRoomActivities(roomId, parseInt(limit))
 
-      res.json({ activities })
+      res.json({ logs: activities })
+    })
+  )
+
+  // Download room archive
+  router.get('/:roomId/archive',
+    checkRoomAccess(db),
+    asyncHandler(async (req, res) => {
+      const { roomId } = req.params
+      const { format = 'json' } = req.query
+
+      // Get comprehensive room data
+      const [room, participants, receipts, settlements, activities] = await Promise.all([
+        roomModel.findById(roomId),
+        db.all('SELECT id, name, is_admin, created_at FROM participants WHERE room_id = ?', [roomId]),
+        db.all(`
+          SELECT r.*, p.name as uploader_name,
+                 GROUP_CONCAT(
+                   json_object(
+                     'id', ri.id,
+                     'name', ri.name,
+                     'price', ri.price,
+                     'quantity', ri.quantity,
+                     'category', ri.category
+                   )
+                 ) as items
+          FROM receipts r
+          LEFT JOIN participants p ON r.uploader_id = p.id
+          LEFT JOIN receipt_items ri ON r.id = ri.receipt_id
+          WHERE r.room_id = ?
+          GROUP BY r.id
+          ORDER BY r.created_at DESC
+        `, [roomId]),
+        db.all(`
+          SELECT s.*, 
+                 from_p.name as from_name,
+                 to_p.name as to_name
+          FROM settlements s
+          LEFT JOIN participants from_p ON s.from_participant_id = from_p.id
+          LEFT JOIN participants to_p ON s.to_participant_id = to_p.id
+          WHERE s.room_id = ?
+          ORDER BY s.created_at DESC
+        `, [roomId]),
+        activityLogger.getRoomActivities(roomId, 1000)
+      ])
+
+      const archiveData = {
+        room: {
+          id: room.id,
+          name: room.name,
+          entryCode: room.entryCode,
+          language: room.language,
+          status: room.status,
+          createdAt: room.createdAt
+        },
+        participants,
+        receipts: receipts.map(r => ({
+          ...r,
+          items: r.items ? JSON.parse(`[${r.items}]`) : []
+        })),
+        settlements,
+        activities,
+        generatedAt: new Date().toISOString(),
+        totalReceiptAmount: receipts.reduce((sum, r) => sum + (r.total_amount || 0), 0)
+      }
+
+      if (format === 'summary') {
+        // Return only summary data
+        const summary = {
+          room: archiveData.room,
+          summary: {
+            totalParticipants: participants.length,
+            totalReceipts: receipts.length,
+            totalAmount: archiveData.totalReceiptAmount,
+            settlementStatus: room.status
+          },
+          finalBalances: participants.map(p => {
+            const paid = receipts
+              .filter(r => r.uploader_id === p.id)
+              .reduce((sum, r) => sum + r.total_amount, 0)
+            const settled = settlements
+              .filter(s => s.from_participant_id === p.id && s.status === 'completed')
+              .reduce((sum, s) => sum + s.amount, 0)
+            return {
+              name: p.name,
+              paid,
+              settled,
+              balance: paid - settled
+            }
+          }),
+          generatedAt: archiveData.generatedAt
+        }
+        res.json({ data: summary })
+      } else {
+        res.json({ data: archiveData })
+      }
     })
   )
 

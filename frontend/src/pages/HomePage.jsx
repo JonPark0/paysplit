@@ -12,7 +12,7 @@ import RecaptchaInfo from '../components/common/RecaptchaInfo'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useRoomStore } from '../stores/roomStore'
 import { roomAPI } from '../services/api'
-import { createValidator, roomCreationRules, roomJoinRules } from '../utils/validation'
+import { createValidator, roomCreationRules } from '../utils/validation'
 import recaptchaService from '../services/recaptcha'
 
 const HomePage = () => {
@@ -22,7 +22,6 @@ const HomePage = () => {
   const { setCurrentRoom, setCurrentParticipant, setSessionToken, addRoom, rooms } = useRoomStore()
 
   // Form states
-  const [activeTab, setActiveTab] = useState('create') // 'create' or 'join'
   const [loading, setLoading] = useState(false)
   const [showRoomForm, setShowRoomForm] = useState(rooms.length === 0) // Show form if no rooms
   
@@ -35,17 +34,8 @@ const HomePage = () => {
   })
   const [createErrors, setCreateErrors] = useState({})
 
-  // Join room form
-  const [joinForm, setJoinForm] = useState({
-    entryCode: '',
-    participantName: '',
-    password: ''
-  })
-  const [joinErrors, setJoinErrors] = useState({})
-
   // Validators
   const validateCreateForm = createValidator(roomCreationRules)
-  const validateJoinForm = createValidator(roomJoinRules)
 
   // Create room
   const handleCreateRoom = async (e) => {
@@ -87,49 +77,6 @@ const HomePage = () => {
   }
 
   // Join room
-  const handleJoinRoom = async (e) => {
-    e.preventDefault()
-    
-    const errors = validateJoinForm(joinForm)
-    if (errors) {
-      setJoinErrors(errors)
-      return
-    }
-
-    setLoading(true)
-    setJoinErrors({})
-
-    try {
-      // Get reCAPTCHA token
-      const recaptchaToken = await recaptchaService.getRoomJoinToken()
-      
-      const response = await roomAPI.join({
-        ...joinForm,
-        recaptchaToken
-      })
-
-      // Update stores
-      setCurrentRoom(response.room)
-      setCurrentParticipant(response.participant)
-      setSessionToken(response.sessionToken)
-      addRoom(response.room, response.participant, response.sessionToken)
-
-      toast.success(t('room.join.success'))
-      navigate(`/${language}/room/${response.room.id}`)
-    } catch (error) {
-      console.error('Room join failed:', error)
-      
-      if (error.status === 404) {
-        setJoinErrors({ entryCode: t('errors.roomNotFound') })
-      } else if (error.status === 401) {
-        setJoinErrors({ password: t('errors.wrongPassword') })
-      } else {
-        toast.error(error.message || t('errors.serverError'))
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Form handlers
   const handleCreateFormChange = (field, value) => {
@@ -139,12 +86,6 @@ const HomePage = () => {
     }
   }
 
-  const handleJoinFormChange = (field, value) => {
-    setJoinForm(prev => ({ ...prev, [field]: value }))
-    if (joinErrors[field]) {
-      setJoinErrors(prev => ({ ...prev, [field]: null }))
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
@@ -171,127 +112,59 @@ const HomePage = () => {
           ) : (
             <div className="max-w-md mx-auto">
               <div className="card animate-fade-in">
-                {/* Tabs */}
+                {/* Header */}
               <div className="card-header">
-                <div className="flex space-x-1 bg-neutral-100 p-1 rounded-lg">
-                  <button
-                    onClick={() => setActiveTab('create')}
-                    className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all ${
-                      activeTab === 'create'
-                        ? 'bg-white text-primary-600 shadow-sm'
-                        : 'text-neutral-600 hover:text-neutral-900'
-                    }`}
-                  >
-                    <Plus className="w-4 h-4 inline mr-2" />
-                    {t('home.createRoom')}
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('join')}
-                    className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all ${
-                      activeTab === 'join'
-                        ? 'bg-white text-primary-600 shadow-sm'
-                        : 'text-neutral-600 hover:text-neutral-900'
-                    }`}
-                  >
-                    <Users className="w-4 h-4 inline mr-2" />
-                    {t('home.joinRoom')}
-                  </button>
-                </div>
+                <h2 className="text-xl font-bold text-neutral-900 flex items-center">
+                  <Plus className="w-5 h-5 mr-2" />
+                  {t('home.createRoom')}
+                </h2>
               </div>
 
               {/* Form Content */}
               <div className="card-body">
-                {activeTab === 'create' ? (
-                  <form onSubmit={handleCreateRoom} className="space-y-4">
-                    <Input
-                      label={t('room.create.roomName')}
-                      placeholder={t('room.create.roomNamePlaceholder')}
-                      value={createForm.name}
-                      onChange={(e) => handleCreateFormChange('name', e.target.value)}
-                      error={createErrors.name}
-                      fullWidth
-                    />
+                <form onSubmit={handleCreateRoom} className="space-y-4">
+                  <Input
+                    label={t('room.create.roomName')}
+                    placeholder={t('room.create.roomNamePlaceholder')}
+                    value={createForm.name}
+                    onChange={(e) => handleCreateFormChange('name', e.target.value)}
+                    error={createErrors.name}
+                    fullWidth
+                  />
 
-                    <Input
-                      label={t('room.create.adminName')}
-                      placeholder={t('room.create.adminNamePlaceholder')}
-                      value={createForm.adminName}
-                      onChange={(e) => handleCreateFormChange('adminName', e.target.value)}
-                      error={createErrors.adminName}
-                      required
-                      fullWidth
-                    />
+                  <Input
+                    label={t('room.create.adminName')}
+                    placeholder={t('room.create.adminNamePlaceholder')}
+                    value={createForm.adminName}
+                    onChange={(e) => handleCreateFormChange('adminName', e.target.value)}
+                    error={createErrors.adminName}
+                    required
+                    fullWidth
+                  />
 
-                    <Input
-                      label={t('room.create.password')}
-                      type="password"
-                      placeholder={t('room.create.passwordPlaceholder')}
-                      value={createForm.password}
-                      onChange={(e) => handleCreateFormChange('password', e.target.value)}
-                      error={createErrors.password}
-                      required
-                      fullWidth
-                    />
+                  <Input
+                    label={t('room.create.password')}
+                    type="password"
+                    placeholder={t('room.create.passwordPlaceholder')}
+                    value={createForm.password}
+                    onChange={(e) => handleCreateFormChange('password', e.target.value)}
+                    error={createErrors.password}
+                    required
+                    fullWidth
+                  />
 
-                    <Button
-                      type="submit"
-                      loading={loading}
-                      fullWidth
-                      size="lg"
-                      rightIcon={<ArrowRight className="w-4 h-4" />}
-                    >
-                      {loading ? t('room.create.creating') : t('home.createRoom')}
-                    </Button>
-                    
-                    <RecaptchaInfo className="mt-3" />
-                  </form>
-                ) : (
-                  <form onSubmit={handleJoinRoom} className="space-y-4">
-                    <Input
-                      label={t('room.join.entryCode')}
-                      placeholder={t('room.join.entryCodePlaceholder')}
-                      value={joinForm.entryCode}
-                      onChange={(e) => handleJoinFormChange('entryCode', e.target.value)}
-                      error={joinErrors.entryCode}
-                      maxLength={6}
-                      required
-                      fullWidth
-                    />
-
-                    <Input
-                      label={t('room.join.participantName')}
-                      placeholder={t('room.join.participantNamePlaceholder')}
-                      value={joinForm.participantName}
-                      onChange={(e) => handleJoinFormChange('participantName', e.target.value)}
-                      error={joinErrors.participantName}
-                      required
-                      fullWidth
-                    />
-
-                    <Input
-                      label={t('room.join.password')}
-                      type="password"
-                      placeholder={t('room.join.passwordPlaceholder')}
-                      value={joinForm.password}
-                      onChange={(e) => handleJoinFormChange('password', e.target.value)}
-                      error={joinErrors.password}
-                      required
-                      fullWidth
-                    />
-
-                    <Button
-                      type="submit"
-                      loading={loading}
-                      fullWidth
-                      size="lg"
-                      rightIcon={<ArrowRight className="w-4 h-4" />}
-                    >
-                      {loading ? t('room.join.joining') : t('home.joinRoom')}
-                    </Button>
-                    
-                    <RecaptchaInfo className="mt-3" />
-                  </form>
-                )}
+                  <Button
+                    type="submit"
+                    loading={loading}
+                    fullWidth
+                    size="lg"
+                    rightIcon={<ArrowRight className="w-4 h-4" />}
+                  >
+                    {loading ? t('room.create.creating') : t('home.createRoom')}
+                  </Button>
+                  
+                  <RecaptchaInfo className="mt-3" />
+                </form>
               </div>
             </div>
           </div>

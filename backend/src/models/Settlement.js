@@ -256,8 +256,8 @@ class Settlement {
 
             const balance = (paid?.total || 0) - (owed?.total || 0);
             balances.push({
-                participantId: participant.id,
-                participantName: participant.name,
+                id: participant.id,
+                name: participant.name,
                 balance: balance
             });
         }

@@ -15,6 +15,7 @@ const Settlement = ({ roomId, onBack }) => {
   const [settlements, setSettlements] = useState([])
   const [balances, setBalances] = useState([])
   const [transactions, setTransactions] = useState([])
+  const [totalReceiptAmount, setTotalReceiptAmount] = useState(0)
   const [error, setError] = useState(null)
   const [recalculating, setRecalculating] = useState(false)
 
@@ -33,6 +34,7 @@ const Settlement = ({ roomId, onBack }) => {
       setSettlements(response.settlements || [])
       setBalances(response.balances || [])
       setTransactions(response.transactions || [])
+      setTotalReceiptAmount(response.totalReceiptAmount || 0)
     } catch (error) {
       console.error('Failed to load settlements:', error)
       setError(error.message || '정산 정보를 불러오지 못했습니다')
@@ -171,9 +173,9 @@ const Settlement = ({ roomId, onBack }) => {
           <div className="flex items-center">
             <Calculator className="w-8 h-8 text-primary-600 mr-3" />
             <div>
-              <p className="text-sm text-neutral-600">총 정산 금액</p>
+              <p className="text-sm text-neutral-600">총 영수증 금액</p>
               <p className="text-2xl font-bold text-neutral-900">
-                {formatCurrency(totalDebts, 'KRW')}
+                {formatCurrency(totalReceiptAmount, 'KRW')}
               </p>
             </div>
           </div>

@@ -10,6 +10,7 @@ import Footer from './components/common/Footer'
 // Page components
 import HomePage from './pages/HomePage'
 import RoomPage from './pages/RoomPage'
+import JoinPage from './pages/JoinPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 // Stores
@@ -49,6 +50,9 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="room/:roomId" element={<RoomPage />} />
           </Route>
+          
+          {/* Join room route (language-independent) */}
+          <Route path="/join/:roomId" element={<JoinPage />} />
           
           {/* Legacy room routes (redirect to Korean) */}
           <Route path="/room/:roomId" element={<Navigate to={`/ko/room/${window.location.pathname.split('/')[2]}`} replace />} />

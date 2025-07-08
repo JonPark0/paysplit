@@ -18,7 +18,7 @@ import Button from '../components/common/Button'
 import { SplitManager } from '../components/split'
 import { Settlement } from '../components/settlement'
 import { ReceiptUpload, ReceiptEditor } from '../components/receipt'
-import { ShareModal } from '../components/room'
+import { ShareModal, Settings } from '../components/room'
 import { useRoomStore } from '../stores/roomStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { roomAPI, receiptAPI, settlementAPI } from '../services/api'
@@ -52,6 +52,7 @@ const RoomPage = () => {
   const [showReceiptEdit, setShowReceiptEdit] = useState(false)
   const [selectedReceipt, setSelectedReceipt] = useState(null)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [qrData, setQrData] = useState(null)
 
   // Load room data
@@ -211,7 +212,7 @@ const RoomPage = () => {
                 <Button
                   variant="outline"
                   leftIcon={<Settings className="w-4 h-4" />}
-                  onClick={() => toast.info('설정 기능은 곧 추가될 예정입니다')}
+                  onClick={() => setShowSettings(true)}
                 >
                   {t('common.settings')}
                 </Button>
@@ -440,6 +441,14 @@ const RoomPage = () => {
         roomData={currentRoom}
         qrData={qrData}
       />
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <Settings
+          roomId={roomId}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   )
 }

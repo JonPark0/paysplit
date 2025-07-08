@@ -428,6 +428,13 @@ export default function(db) {
     asyncHandler(async (req, res) => {
       const { roomId } = req.params
       
+      // Get total receipt amount for the room
+      const totalReceiptAmount = await db.get(`
+        SELECT COALESCE(SUM(total_amount), 0) as total
+        FROM receipts
+        WHERE room_id = ?
+      `, [roomId])
+      
       // Get all settlement data
       const [settlements, balances, transactions] = await Promise.all([
         settlementModel.getSettlementsByRoom(roomId),
@@ -438,7 +445,8 @@ export default function(db) {
       res.json({
         settlements: settlements || [],
         balances: balances || [],
-        transactions: transactions || []
+        transactions: transactions || [],
+        totalReceiptAmount: totalReceiptAmount?.total || 0
       })
     })
   )
