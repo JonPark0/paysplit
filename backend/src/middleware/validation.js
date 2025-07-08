@@ -38,9 +38,10 @@ export const roomSchemas = {
 // Receipt validation schemas
 export const receiptSchemas = {
   create: Joi.object({
-    roomId: Joi.string().uuid().required(),
     totalAmount: Joi.number().positive().required(),
     currency: Joi.string().default('KRW'),
+    encryptedFilename: Joi.string().optional(),
+    originalFilename: Joi.string().optional(),
     items: Joi.array().items(
       Joi.object({
         name: Joi.string().min(1).max(100).required(),

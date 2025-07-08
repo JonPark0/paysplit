@@ -17,10 +17,24 @@ router.post('/process-receipt', async (req, res) => {
 
     console.log('Processing receipt with OLLAMA...')
 
+    // Get prompt from environment or use default
+    const defaultPrompt = `영수증 이미지를 분석하여 다음 JSON 형식으로 응답해주세요:
+{
+  "items": [
+    {"name": "상품명", "price": 가격, "quantity": 수량}
+  ],
+  "total": 총액,
+  "store": "상점명"
+}
+
+한국어 텍스트를 정확히 인식하고, 상품명과 가격을 추출해주세요. 가격은 숫자만 반환하세요.`
+
+    const ocrPrompt = process.env.OLLAMA_OCR_PROMPT || prompt || defaultPrompt
+
     // Prepare the request for OLLAMA
     const ollamaRequest = {
       model: OLLAMA_MODEL,
-      prompt: prompt || `영수증 이미지를 분석하여 JSON 형식으로 상품명과 가격을 추출해주세요.`,
+      prompt: ocrPrompt,
       images: [image],
       stream: false,
       format: 'json'
