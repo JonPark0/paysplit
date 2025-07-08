@@ -11,6 +11,7 @@ import Footer from './components/common/Footer'
 import HomePage from './pages/HomePage'
 import RoomPage from './pages/RoomPage'
 import JoinPage from './pages/JoinPage'
+import FeaturesPage from './pages/FeaturesPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 // Stores
@@ -48,6 +49,7 @@ function App() {
           {/* Language-prefixed routes */}
           <Route path="/:lang" element={<LanguageRouter />}>
             <Route index element={<HomePage />} />
+            <Route path="features" element={<FeaturesPage />} />
             <Route path="room/:roomId" element={<RoomPage />} />
           </Route>
           

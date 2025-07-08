@@ -245,5 +245,92 @@
     "days_ago": "{{count}}일 전",
     "weeks_ago": "{{count}}주 전",
     "months_ago": "{{count}}개월 전"
+  },
+  "features": {
+    "hero": {
+      "title": "AI 기반 스마트 더치페이",
+      "subtitle": "최첨단 AI 기술로 영수증을 스캔하고, 똑똑한 알고리즘으로 최적의 정산을 계산하세요",
+      "tryNow": "지금 시작하기"
+    },
+    "main": {
+      "title": "핵심 기능",
+      "subtitle": "PaySplit의 강력한 기능들로 더치페이를 더 쉽고 정확하게 만들어보세요"
+    },
+    "aiOcr": {
+      "title": "AI 영수증 스캔",
+      "subtitle": "인공지능이 영수증을 똑똑하게 읽어드립니다",
+      "description": "최첨단 AI 기술을 활용하여 영수증 이미지에서 텍스트를 정확하게 추출하고 자동으로 항목을 분류합니다. 복잡한 수기 입력 없이도 빠르고 정확한 데이터 입력이 가능합니다.",
+      "highlights": {
+        "accuracy": "AI 학습으로 99% 이상의 높은 인식 정확도",
+        "speed": "몇 초 만에 완료되는 초고속 처리",
+        "languages": "한국어, 영어 등 다양한 언어 지원",
+        "adaptation": "지속적인 학습으로 계속 향상되는 성능"
+      }
+    },
+    "smartSplit": {
+      "title": "스마트 분할 시스템",
+      "subtitle": "최적화된 알고리즘으로 공정한 분할을 실현합니다",
+      "description": "복잡한 그룹 결제를 위한 지능형 분할 시스템입니다. 각 참가자의 소비 패턴과 선호도를 분석하여 가장 공정하고 효율적인 분할 방법을 제안합니다.",
+      "highlights": {
+        "optimal": "최소 송금 횟수로 최적화된 정산 계산",
+        "flexible": "균등분할, 개별분할, 비율분할 등 다양한 옵션",
+        "automatic": "자동 반올림 처리로 정확한 금액 계산",
+        "transparent": "모든 계산 과정이 투명하게 공개"
+      }
+    },
+    "security": {
+      "title": "철저한 보안",
+      "subtitle": "금융 수준의 보안으로 안전하게 보호됩니다",
+      "description": "사용자의 개인정보와 금융 데이터를 최고 수준의 보안 기술로 보호합니다. 모든 데이터는 암호화되며, 정산 완료 후 자동으로 삭제되어 프라이버시를 보장합니다.",
+      "highlights": {
+        "encryption": "AES-256 암호화로 모든 데이터 보호",
+        "authentication": "다중 인증과 reCAPTCHA로 보안 강화",
+        "privacy": "개인정보 최소 수집 및 자동 삭제",
+        "compliance": "GDPR 및 개인정보보호법 완전 준수"
+      }
+    },
+    "technical": {
+      "title": "기술적 우수성",
+      "subtitle": "최신 기술 스택으로 구현된 안정적이고 확장 가능한 플랫폼",
+      "realtime": {
+        "title": "실시간 동기화",
+        "description": "모든 변경사항이 실시간으로 동기화되어 항상 최신 상태 유지"
+      },
+      "transparency": {
+        "title": "완전한 투명성",
+        "description": "모든 계산 과정과 분할 내역을 상세히 확인 가능"
+      },
+      "collaboration": {
+        "title": "협업 친화적",
+        "description": "여러 사용자가 동시에 작업할 수 있는 협업 환경"
+      },
+      "audit": {
+        "title": "활동 기록",
+        "description": "모든 활동이 기록되어 나중에 확인 및 검토 가능"
+      },
+      "settlement": {
+        "title": "스마트 정산",
+        "description": "최소 송금 횟수로 효율적인 정산 자동 계산"
+      },
+      "backup": {
+        "title": "데이터 백업",
+        "description": "완전한 데이터 아카이브 및 백업 시스템"
+      }
+    },
+    "ai": {
+      "title": "AI의 힘으로 더 스마트하게",
+      "description": "머신러닝과 딥러닝 기술을 활용하여 사용자 경험을 지속적으로 개선하고 있습니다. AI가 학습할수록 더 정확하고 빠른 서비스를 제공합니다.",
+      "benefits": {
+        "scanning": "정확한 스캔",
+        "learning": "지속적 학습",
+        "speed": "초고속 처리",
+        "experience": "향상된 UX"
+      }
+    },
+    "cta": {
+      "title": "지금 바로 시작해보세요",
+      "subtitle": "PaySplit으로 더 쉽고 정확한 더치페이를 경험해보세요",
+      "button": "무료로 시작하기"
+    }
   }
 }

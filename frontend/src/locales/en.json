@@ -245,5 +245,92 @@
     "days_ago": "{{count}} days ago",
     "weeks_ago": "{{count}} weeks ago",
     "months_ago": "{{count}} months ago"
+  },
+  "features": {
+    "hero": {
+      "title": "AI-Powered Smart Bill Splitting",
+      "subtitle": "Scan receipts with cutting-edge AI technology and calculate optimal settlements with intelligent algorithms",
+      "tryNow": "Get Started Now"
+    },
+    "main": {
+      "title": "Core Features",
+      "subtitle": "Make bill splitting easier and more accurate with PaySplit's powerful features"
+    },
+    "aiOcr": {
+      "title": "AI Receipt Scanning",
+      "subtitle": "AI intelligently reads your receipts",
+      "description": "Using cutting-edge AI technology to accurately extract text from receipt images and automatically categorize items. Fast and accurate data input without complex manual entry.",
+      "highlights": {
+        "accuracy": "Over 99% recognition accuracy with AI learning",
+        "speed": "Ultra-fast processing completed in seconds",
+        "languages": "Support for multiple languages including Korean and English",
+        "adaptation": "Continuously improving performance through ongoing learning"
+      }
+    },
+    "smartSplit": {
+      "title": "Smart Splitting System",
+      "subtitle": "Fair splitting with optimized algorithms",
+      "description": "An intelligent splitting system for complex group payments. Analyzes each participant's consumption patterns and preferences to suggest the most fair and efficient splitting method.",
+      "highlights": {
+        "optimal": "Optimized settlement calculation with minimal transfers",
+        "flexible": "Various options: equal split, individual split, ratio split",
+        "automatic": "Accurate amount calculation with automatic rounding",
+        "transparent": "All calculation processes are transparently disclosed"
+      }
+    },
+    "security": {
+      "title": "Robust Security",
+      "subtitle": "Protected with financial-grade security",
+      "description": "Protects user personal information and financial data with the highest level of security technology. All data is encrypted and automatically deleted after settlement completion to ensure privacy.",
+      "highlights": {
+        "encryption": "All data protected with AES-256 encryption",
+        "authentication": "Enhanced security with multi-factor authentication and reCAPTCHA",
+        "privacy": "Minimal personal information collection and automatic deletion",
+        "compliance": "Full compliance with GDPR and privacy protection laws"
+      }
+    },
+    "technical": {
+      "title": "Technical Excellence",
+      "subtitle": "Stable and scalable platform built with the latest technology stack",
+      "realtime": {
+        "title": "Real-time Synchronization",
+        "description": "All changes are synchronized in real-time to maintain the latest state"
+      },
+      "transparency": {
+        "title": "Complete Transparency",
+        "description": "Detailed visibility into all calculation processes and split details"
+      },
+      "collaboration": {
+        "title": "Collaboration-Friendly",
+        "description": "Collaborative environment where multiple users can work simultaneously"
+      },
+      "audit": {
+        "title": "Activity Logging",
+        "description": "All activities are recorded for later verification and review"
+      },
+      "settlement": {
+        "title": "Smart Settlement",
+        "description": "Efficient settlement auto-calculation with minimal transfer count"
+      },
+      "backup": {
+        "title": "Data Backup",
+        "description": "Complete data archive and backup system"
+      }
+    },
+    "ai": {
+      "title": "Smarter with AI Power",
+      "description": "We continuously improve user experience using machine learning and deep learning technologies. The more AI learns, the more accurate and faster service we provide.",
+      "benefits": {
+        "scanning": "Accurate Scanning",
+        "learning": "Continuous Learning",
+        "speed": "Ultra-fast Processing",
+        "experience": "Enhanced UX"
+      }
+    },
+    "cta": {
+      "title": "Start Now",
+      "subtitle": "Experience easier and more accurate bill splitting with PaySplit",
+      "button": "Start for Free"
+    }
   }
 }
