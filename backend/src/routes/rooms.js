@@ -337,6 +337,81 @@ export default function(db) {
     })
   )
 
+  // Leave room
+  router.post('/:roomId/leave',
+    checkRoomAccess(db),
+    asyncHandler(async (req, res) => {
+      const { roomId } = req.params
+      const { participant } = req
+
+      // Get all participants to check if admin transfer is needed
+      const participants = await participantModel.findByRoomId(roomId)
+      const otherParticipants = participants.filter(p => p.id !== participant.id)
+
+      // If this is the last participant, we can just remove them
+      if (otherParticipants.length === 0) {
+        // Remove all participant's sessions
+        await db.run('DELETE FROM sessions WHERE participant_id = ?', [participant.id])
+        
+        // Remove participant
+        await db.run('DELETE FROM participants WHERE id = ?', [participant.id])
+        
+        // Log activity
+        await activityLogger.logActivity(
+          roomId,
+          participant.id,
+          'participant_left',
+          { participantName: participant.name, lastParticipant: true }
+        )
+        
+        return res.json({ success: true, message: 'Left room successfully' })
+      }
+
+      // If the leaving participant is admin, transfer admin rights
+      if (participant.isAdmin) {
+        // Find the next admin (first non-admin participant by join date)
+        const nextAdmin = otherParticipants
+          .filter(p => !p.isAdmin)
+          .sort((a, b) => new Date(a.joinedAt) - new Date(b.joinedAt))[0]
+        
+        if (nextAdmin) {
+          // Transfer admin rights
+          await db.run('UPDATE participants SET is_admin = 1 WHERE id = ?', [nextAdmin.id])
+          
+          // Log admin transfer
+          await activityLogger.logActivity(
+            roomId,
+            participant.id,
+            'admin_transferred',
+            { 
+              fromParticipant: participant.name,
+              toParticipant: nextAdmin.name
+            }
+          )
+        }
+      }
+
+      // Remove all participant's sessions
+      await db.run('DELETE FROM sessions WHERE participant_id = ?', [participant.id])
+      
+      // Remove participant
+      await db.run('DELETE FROM participants WHERE id = ?', [participant.id])
+      
+      // Update room activity
+      await roomModel.updateLastActivity(roomId)
+      
+      // Log activity
+      await activityLogger.logActivity(
+        roomId,
+        participant.id,
+        'participant_left',
+        { participantName: participant.name, wasAdmin: participant.isAdmin }
+      )
+      
+      res.json({ success: true, message: 'Left room successfully' })
+    })
+  )
+
   // Download room archive
   router.get('/:roomId/archive',
     checkRoomAccess(db),

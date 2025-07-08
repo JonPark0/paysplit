@@ -12,7 +12,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   
   const { language, setLanguage } = useSettingsStore()
-  const { currentRoom, currentParticipant, leaveRoom, rooms, switchToRoom, getRecentRooms } = useRoomStore()
+  const { currentRoom, currentParticipant, rooms, switchToRoom, getRecentRooms } = useRoomStore()
   const [showRoomDropdown, setShowRoomDropdown] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -30,12 +30,6 @@ const Header = () => {
     
     const newPath = pathSegments.join('/')
     navigate(newPath, { replace: true })
-  }
-
-  const handleLeaveRoom = () => {
-    leaveRoom()
-    navigate(`/${language}`)
-    setIsMenuOpen(false)
   }
 
   const handleHomeClick = () => {
@@ -159,13 +153,6 @@ const Header = () => {
                     )}
                   </div>
                 )}
-                
-                <button
-                  onClick={handleLeaveRoom}
-                  className="btn-ghost text-sm"
-                >
-                  {t('common.leaveRoom')}
-                </button>
               </>
             ) : (
               <nav className="flex items-center space-x-6">
@@ -240,15 +227,7 @@ const Header = () => {
               </button>
             )}
 
-            {isRoomPage ? (
-              <button
-                onClick={handleLeaveRoom}
-                className="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 rounded-md"
-              >
-                <Home className="w-4 h-4 mr-3" />
-                {t('common.leaveRoom')}
-              </button>
-            ) : (
+            {!isRoomPage && (
               <>
                 <button
                   onClick={() => {

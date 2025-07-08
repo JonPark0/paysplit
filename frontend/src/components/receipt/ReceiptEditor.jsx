@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Trash2, Save, X, AlertCircle, User } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -24,6 +24,8 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
 
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [showTotalWarning, setShowTotalWarning] = useState(false)
+  const warningTimeoutRef = useRef(null)
 
   // Calculate total from items
   const calculateTotal = (items) => {
@@ -39,6 +41,34 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
     const newTotal = calculateTotal(receiptData.items)
     setReceiptData(prev => ({ ...prev, total: newTotal }))
   }, [receiptData.items])
+
+  // Debounced warning display to prevent flickering
+  useEffect(() => {
+    const totalDifference = receiptData.total - calculateTotal(receiptData.items)
+    const hasDifference = Math.abs(totalDifference) > 0.01
+
+    // Clear any existing timeout
+    if (warningTimeoutRef.current) {
+      clearTimeout(warningTimeoutRef.current)
+    }
+
+    if (hasDifference) {
+      // Show warning immediately if there's a difference
+      setShowTotalWarning(true)
+    } else {
+      // Delay hiding the warning to prevent flickering
+      warningTimeoutRef.current = setTimeout(() => {
+        setShowTotalWarning(false)
+      }, 300)
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current)
+      }
+    }
+  }, [receiptData.total, receiptData.items])
 
   // Handle item change
   const handleItemChange = (index, field, value) => {
@@ -361,7 +391,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
                 </span>
               </div>
 
-              {Math.abs(totalDifference) > 0.01 && (
+              {showTotalWarning && (
                 <div className="flex justify-between items-center text-yellow-600">
                   <span className="text-sm">
                     {t('receipt.edit.difference')}
@@ -374,7 +404,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
               )}
             </div>
 
-            {Math.abs(totalDifference) > 0.01 && (
+            {showTotalWarning && (
               <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-start">
                   <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { 
   X, 
   Download, 
@@ -9,22 +10,33 @@ import {
   User,
   Receipt,
   Calculator,
-  RefreshCw
+  RefreshCw,
+  LogOut,
+  AlertTriangle
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 import Button from '../common/Button'
+import Input from '../common/Input'
 import LoadingSpinner from '../common/LoadingSpinner'
 import { roomAPI } from '../../services/api'
 import { formatCurrency } from '../../utils/currency'
+import { useRoomStore } from '../../stores/roomStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 
 const Settings = ({ roomId, onClose }) => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  
+  const { language } = useSettingsStore()
+  const { currentRoom, currentParticipant, clearCurrentRoomData } = useRoomStore()
   
   const [activeTab, setActiveTab] = useState('logs')
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(false)
   const [archiving, setArchiving] = useState(false)
+  const [leaveRoomConfirmation, setLeaveRoomConfirmation] = useState('')
+  const [leavingRoom, setLeavingRoom] = useState(false)
 
   useEffect(() => {
     if (activeTab === 'logs') {
@@ -111,6 +123,44 @@ const Settings = ({ roomId, onClose }) => {
     }
   }
 
+  const handleLeaveRoom = async () => {
+    if (!currentRoom || !currentParticipant) {
+      toast.error('방 정보를 불러올 수 없습니다')
+      return
+    }
+
+    // Check if user typed the correct room name
+    const roomNameToCheck = currentRoom.name || currentRoom.entryCode
+    if (leaveRoomConfirmation.trim() !== roomNameToCheck) {
+      toast.error('방 이름을 정확히 입력해주세요')
+      return
+    }
+
+    try {
+      setLeavingRoom(true)
+      
+      // Call backend API to leave room
+      await roomAPI.leaveRoom(roomId)
+      
+      // Clear current room data but keep other room history
+      clearCurrentRoomData()
+      
+      toast.success('방에서 나왔습니다')
+      
+      // Navigate to home
+      navigate(`/${language}`)
+      
+      // Close settings modal
+      onClose()
+      
+    } catch (error) {
+      console.error('Failed to leave room:', error)
+      toast.error('방 나가기에 실패했습니다')
+    } finally {
+      setLeavingRoom(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
@@ -147,6 +197,17 @@ const Settings = ({ roomId, onClose }) => {
           >
             <Download className="w-4 h-4 inline mr-2" />
             아카이브
+          </button>
+          <button
+            onClick={() => setActiveTab('leave')}
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'leave'
+                ? 'border-accent-500 text-accent-600'
+                : 'border-transparent text-neutral-600 hover:text-neutral-900'
+            }`}
+          >
+            <LogOut className="w-4 h-4 inline mr-2" />
+            방 나가기
           </button>
         </div>
 
@@ -256,6 +317,81 @@ const Settings = ({ roomId, onClose }) => {
                   <li>• 다운로드된 파일에는 개인정보가 포함될 수 있습니다</li>
                   <li>• 파일을 안전한 장소에 보관하시기 바랍니다</li>
                   <li>• 정산 완료 후 1개월 뒤 서버에서 자동 삭제됩니다</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'leave' && (
+            <div>
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-neutral-900 mb-2 flex items-center">
+                  <AlertTriangle className="w-5 h-5 text-accent-600 mr-2" />
+                  방 나가기
+                </h3>
+                <p className="text-neutral-600">
+                  방에서 나가면 더 이상 해당 방의 활동에 참여할 수 없습니다.
+                  {currentParticipant?.isAdmin && (
+                    <span className="text-accent-600 font-medium">
+                      {' '}관리자 권한이 있는 경우 다른 참가자에게 관리자 권한이 자동으로 이전됩니다.
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              <div className="border border-accent-200 rounded-lg p-6 bg-accent-50">
+                <h4 className="font-medium text-accent-900 mb-4">확인 절차</h4>
+                <p className="text-accent-700 mb-4">
+                  방 나가기를 진행하려면 아래에 방 이름을 정확히 입력해주세요:
+                </p>
+                
+                <div className="mb-4">
+                  <div className="text-sm text-neutral-600 mb-2">
+                    입력해야 할 방 이름:
+                  </div>
+                  <div className="font-mono text-sm bg-white p-2 rounded border border-accent-200">
+                    {currentRoom?.name || currentRoom?.entryCode}
+                  </div>
+                </div>
+
+                <Input
+                  label="방 이름 확인"
+                  placeholder="위의 방 이름을 정확히 입력하세요"
+                  value={leaveRoomConfirmation}
+                  onChange={(e) => setLeaveRoomConfirmation(e.target.value)}
+                  className="mb-4"
+                  fullWidth
+                />
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setActiveTab('logs')
+                      setLeaveRoomConfirmation('')
+                    }}
+                    className="flex-1"
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    onClick={handleLeaveRoom}
+                    disabled={leavingRoom || leaveRoomConfirmation.trim() !== (currentRoom?.name || currentRoom?.entryCode)}
+                    loading={leavingRoom}
+                    className="flex-1 bg-accent-600 hover:bg-accent-700"
+                  >
+                    방 나가기
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-neutral-50 rounded-lg">
+                <h4 className="font-medium text-neutral-900 mb-2">주의사항</h4>
+                <ul className="text-sm text-neutral-600 space-y-1">
+                  <li>• 방을 나가면 해당 방의 데이터에 접근할 수 없습니다</li>
+                  <li>• 정산이 완료되지 않은 상태에서 나가면 정산에 영향을 줄 수 있습니다</li>
+                  <li>• 관리자가 나가는 경우 다른 참가자에게 관리자 권한이 이전됩니다</li>
+                  <li>• 나중에 다시 참여하려면 입장 코드가 필요합니다</li>
                 </ul>
               </div>
             </div>

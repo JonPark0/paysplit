@@ -148,6 +148,12 @@ export const roomAPI = {
     })
     return response.data
   },
+
+  // Leave room
+  leaveRoom: async (roomId) => {
+    const response = await api.post(`/rooms/${roomId}/leave`)
+    return response.data
+  },
 }
 
 // Receipt API
