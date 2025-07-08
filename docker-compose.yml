@@ -40,7 +40,7 @@ services:
       - DATA_RETENTION_DAYS=${DATA_RETENTION_DAYS:-30}
       - MAX_FILE_SIZE=${MAX_FILE_SIZE:-10485760}
       - OLLAMA_URL=${OLLAMA_URL:-http://192.168.50.242:11434}
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2-vision:latest}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma3:latest}
     networks:
       - paysplit-network
       - nginx-proxy-manager_npm-network

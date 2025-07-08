@@ -4,7 +4,7 @@ const router = express.Router()
 
 // OLLAMA API endpoint configuration
 const OLLAMA_BASE_URL = process.env.OLLAMA_URL || 'http://192.168.50.242:11434'
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2-vision:latest'
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma3:latest'
 
 // Process receipt with OLLAMA vision model
 router.post('/process-receipt', async (req, res) => {
