@@ -141,10 +141,40 @@ class OCRService {
 
   async fileToBase64(file) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const base64 = reader.result.split(',')[1] // Remove data:image/xxx;base64, prefix
+      // Compress image before converting to base64
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      
+      img.onload = () => {
+        // Calculate dimensions to limit file size
+        const maxWidth = 1200
+        const maxHeight = 1600
+        let { width, height } = img
+        
+        // Scale down if too large
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height)
+          width *= ratio
+          height *= ratio
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height)
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8) // 80% quality
+        const base64 = compressedDataUrl.split(',')[1]
         resolve(base64)
+      }
+      
+      img.onerror = reject
+      
+      // Read original file
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        img.src = e.target.result
       }
       reader.onerror = reject
       reader.readAsDataURL(file)
