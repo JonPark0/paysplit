@@ -347,7 +347,7 @@ export default function(db) {
       // Get comprehensive room data
       const [room, participants, receipts, settlements, activities] = await Promise.all([
         roomModel.findById(roomId),
-        db.all('SELECT id, name, is_admin, created_at FROM participants WHERE room_id = ?', [roomId]),
+        db.all('SELECT id, name, is_admin, joined_at as created_at FROM participants WHERE room_id = ?', [roomId]),
         db.all(`
           SELECT r.*, p.name as uploader_name
           FROM receipts r
