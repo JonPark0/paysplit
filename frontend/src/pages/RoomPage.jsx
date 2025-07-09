@@ -23,6 +23,7 @@ import { useRoomStore } from '../stores/roomStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { roomAPI, receiptAPI, settlementAPI } from '../services/api'
 import { formatCurrency } from '../utils/currency'
+import recaptchaService from '../services/recaptcha'
 
 const RoomPage = () => {
   const { roomId } = useParams()
@@ -148,10 +149,54 @@ const RoomPage = () => {
     setShowReceiptUpload(true)
   }
 
-  const handleReceiptUploadSuccess = (uploadData) => {
+  const handleReceiptUploadSuccess = async (uploadData) => {
     setShowReceiptUpload(false)
-    setSelectedReceipt(uploadData)
-    setShowReceiptEdit(true)
+    
+    // If skipEditing flag is set, save the receipt directly
+    if (uploadData.skipEditing) {
+      try {
+        // Get current participant for payer ID
+        const payerId = currentParticipant?.id || null
+        
+        if (!payerId) {
+          toast.error('현재 참가자 정보를 찾을 수 없습니다')
+          return
+        }
+        
+        // Get reCAPTCHA token
+        const recaptchaToken = await recaptchaService.getReceiptUploadToken()
+        
+        const receiptData = {
+          totalAmount: uploadData.total,
+          currency: 'KRW',
+          payerId: payerId,
+          recaptchaToken,
+          items: uploadData.items.map(item => ({
+            name: item.name.trim(),
+            price: parseFloat(item.price),
+            quantity: parseInt(item.quantity) || 1,
+            category: item.category || 'other'
+          })),
+          ...(uploadData.file && {
+            encryptedFilename: uploadData.file.encryptedFilename,
+            originalFilename: uploadData.file.originalFilename
+          })
+        }
+
+        await receiptAPI.create(roomId, receiptData)
+        toast.success('영수증이 저장되었습니다')
+        
+        // Refresh the page to show the new receipt
+        window.location.reload()
+      } catch (error) {
+        console.error('Failed to save receipt:', error)
+        toast.error(error.message || '영수증 저장에 실패했습니다')
+      }
+    } else {
+      // Go to editing mode
+      setSelectedReceipt(uploadData)
+      setShowReceiptEdit(true)
+    }
   }
 
   const handleReceiptEditSuccess = (receipt) => {

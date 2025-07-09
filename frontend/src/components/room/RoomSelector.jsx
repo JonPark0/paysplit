@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Clock, Users, Receipt, ArrowRight, Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -8,6 +8,7 @@ import Button from '../common/Button'
 import Input from '../common/Input'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useRoomStore } from '../../stores/roomStore'
+import { roomAPI } from '../../services/api'
 import { formatDistanceToNow } from '../../utils/date'
 
 const RoomSelector = ({ onCreateNew }) => {
@@ -18,6 +19,7 @@ const RoomSelector = ({ onCreateNew }) => {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [roomStats, setRoomStats] = useState({}) // Store room stats by roomId
   const roomsPerPage = 6
 
   // Filter rooms based on search query
@@ -29,6 +31,44 @@ const RoomSelector = ({ onCreateNew }) => {
 
   // Get recent rooms for quick access
   const recentRooms = getRecentRooms()
+
+  // Fetch room stats when rooms change
+  useEffect(() => {
+    const fetchRoomStats = async () => {
+      if (rooms.length === 0) return
+
+      const statsPromises = rooms.map(async (room) => {
+        try {
+          const roomInfo = await roomAPI.getRoomInfo(room.id)
+          return {
+            roomId: room.id,
+            participantCount: roomInfo.room.participantCount || 0,
+            receiptCount: roomInfo.room.receiptCount || 0
+          }
+        } catch (error) {
+          console.error(`Failed to fetch stats for room ${room.id}:`, error)
+          return {
+            roomId: room.id,
+            participantCount: 0,
+            receiptCount: 0
+          }
+        }
+      })
+
+      try {
+        const stats = await Promise.all(statsPromises)
+        const statsMap = stats.reduce((acc, stat) => {
+          acc[stat.roomId] = stat
+          return acc
+        }, {})
+        setRoomStats(statsMap)
+      } catch (error) {
+        console.error('Failed to fetch room stats:', error)
+      }
+    }
+
+    fetchRoomStats()
+  }, [rooms])
 
   // Pagination logic
   const roomsToShow = searchQuery ? filteredRooms : rooms
@@ -102,11 +142,11 @@ const RoomSelector = ({ onCreateNew }) => {
       <div className="flex items-center space-x-4 text-sm text-neutral-600">
         <div className="flex items-center">
           <Users className="w-4 h-4 mr-1" />
-          <span>{room.participantCount || 0}명</span>
+          <span>{roomStats[room.id]?.participantCount || 0}명</span>
         </div>
         <div className="flex items-center">
           <Receipt className="w-4 h-4 mr-1" />
-          <span>{room.receiptCount || 0}개</span>
+          <span>{roomStats[room.id]?.receiptCount || 0}개</span>
         </div>
         {room.lastActivity && (
           <div className="flex items-center">

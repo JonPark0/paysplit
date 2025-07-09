@@ -134,25 +134,91 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
     }
   }
 
-  // Handle OCR retry
-  const handleRetry = () => {
-    if (selectedFile) {
-      setUploadStep('processing')
-      setOcrProgress(0)
-      handleUpload(selectedFile)
+  // Handle OCR retry - re-analyze the same image
+  const handleRetry = async () => {
+    if (selectedFile && selectedFile.type.startsWith('image/')) {
+      try {
+        setUploadStep('processing')
+        setOcrProgress(0)
+        setError(null)
+
+        // Re-run OCR analysis on the same file
+        const ocrResult = await ocrService.processImage(
+          selectedFile,
+          (progress) => setOcrProgress(progress)
+        )
+
+        const validation = ocrService.validateResult(ocrResult)
+        
+        setOcrResult({
+          ...ocrResult,
+          validation
+        })
+
+        setUploadStep('review')
+      } catch (ocrError) {
+        console.error('OCR retry failed:', ocrError)
+        toast.error('분석을 다시 시도하는 중 오류가 발생했습니다')
+        
+        // Show failed OCR result
+        setOcrResult({
+          items: [],
+          total: 0,
+          validation: { isValid: false, issues: ['다시 시도했지만 분석에 실패했습니다'], score: 0 }
+        })
+        setUploadStep('review')
+      }
     } else {
+      // If no file or not an image, go back to file selection
       setUploadStep('select')
     }
   }
 
-  // Handle proceed to receipt editing
-  const handleProceed = () => {
+  // Handle proceed to finish upload directly (save as-is)
+  const handleProceed = async () => {
+    try {
+      // Create receipt directly from OCR results without editing
+      const receiptData = {
+        totalAmount: ocrResult.total,
+        currency: 'KRW',
+        payerId: null, // Will need to be set by the user or default to current user
+        items: ocrResult.items.map(item => ({
+          name: item.name.trim(),
+          price: parseFloat(item.price),
+          quantity: parseInt(item.quantity) || 1,
+          category: item.category || 'other'
+        })),
+        ...(uploadResult && {
+          encryptedFilename: uploadResult.encryptedFilename,
+          originalFilename: uploadResult.originalFilename
+        })
+      }
+
+      // For now, let's call the success callback with a flag to bypass editing
+      if (onSuccess) {
+        onSuccess({
+          file: uploadResult,
+          ocrResult,
+          items: ocrResult.items,
+          total: ocrResult.total,
+          skipEditing: true // Flag to indicate direct save
+        })
+      }
+    } catch (error) {
+      console.error('Failed to save receipt directly:', error)
+      toast.error('영수증 저장에 실패했습니다')
+    }
+  }
+
+  // Handle viewing details (previously manual entry from review)
+  const handleViewDetails = () => {
     if (onSuccess) {
       onSuccess({
         file: uploadResult,
         ocrResult,
         items: ocrResult.items,
-        total: ocrResult.total
+        total: ocrResult.total,
+        skipEditing: false // Go to editing mode
       })
     }
   }
@@ -363,13 +429,14 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
               variant="outline"
               onClick={handleRetry}
             >
-              {t('receipt.upload.retry')}
+              다시 시도
             </Button>
             <Button
               variant="outline"
-              onClick={handleManualEntry}
+              onClick={handleViewDetails}
+              leftIcon={<FileText className="w-4 h-4" />}
             >
-              {t('receipt.upload.manualEntry')}
+              자세히 보기
             </Button>
           </div>
         </div>

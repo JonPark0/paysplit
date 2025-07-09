@@ -273,6 +273,11 @@ export default function(db) {
         SELECT COUNT(*) as count FROM participants WHERE room_id = ?
       `, [roomId])
 
+      // Get receipt count
+      const receiptCount = await db.get(`
+        SELECT COUNT(*) as count FROM receipts WHERE room_id = ?
+      `, [roomId])
+
       // Get total amount from receipts
       const totalAmount = await db.get(`
         SELECT COALESCE(SUM(total_amount), 0) as total FROM receipts WHERE room_id = ?
@@ -285,6 +290,7 @@ export default function(db) {
           language: room.language,
           entryCode: room.entryCode,
           participantCount: participantCount?.count || 0,
+          receiptCount: receiptCount?.count || 0,
           totalAmount: totalAmount?.total || 0
         }
       })
