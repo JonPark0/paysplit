@@ -166,23 +166,46 @@ const RoomPage = () => {
         // Get reCAPTCHA token
         const recaptchaToken = await recaptchaService.getReceiptUploadToken()
         
+        // Ensure we have valid items data
+        if (!uploadData.items || !Array.isArray(uploadData.items)) {
+          toast.error('영수증 항목 데이터가 올바르지 않습니다')
+          return
+        }
+
+        // Filter out invalid items and ensure proper formatting
+        const validItems = uploadData.items
+          .filter(item => item && item.name && item.name.trim().length > 0)
+          .map(item => ({
+            name: item.name.trim(),
+            price: Math.max(0, parseFloat(item.price) || 0),
+            quantity: Math.max(1, parseInt(item.quantity) || 1),
+            category: item.category || 'other'
+          }))
+          .filter(item => item.price > 0) // Remove items with 0 price
+        
+        // Ensure we have at least one valid item
+        if (validItems.length === 0) {
+          toast.error('유효한 항목이 없습니다. 항목명과 가격을 확인해주세요.')
+          return
+        }
+
+        // Calculate total from valid items to ensure consistency
+        const calculatedTotal = validItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        const totalAmount = calculatedTotal > 0 ? calculatedTotal : Math.max(0, uploadData.total || 0)
+
         const receiptData = {
-          totalAmount: uploadData.total,
+          totalAmount: totalAmount,
           currency: 'KRW',
           payerId: payerId,
           recaptchaToken,
-          items: uploadData.items.map(item => ({
-            name: item.name.trim(),
-            price: parseFloat(item.price),
-            quantity: parseInt(item.quantity) || 1,
-            category: item.category || 'other'
-          })),
+          items: validItems,
           ...(uploadData.file && {
             encryptedFilename: uploadData.file.encryptedFilename,
             originalFilename: uploadData.file.originalFilename
           })
         }
 
+        console.log('Saving receipt with data:', receiptData)
         await receiptAPI.create(roomId, receiptData)
         toast.success('영수증이 저장되었습니다')
         
@@ -190,7 +213,16 @@ const RoomPage = () => {
         window.location.reload()
       } catch (error) {
         console.error('Failed to save receipt:', error)
-        toast.error(error.message || '영수증 저장에 실패했습니다')
+        console.error('Receipt data that failed:', receiptData)
+        
+        // Show more specific error message
+        if (error.response?.data?.message) {
+          toast.error(error.response.data.message)
+        } else if (error.message) {
+          toast.error(error.message)
+        } else {
+          toast.error('영수증 저장에 실패했습니다')
+        }
       }
     } else {
       // Go to editing mode

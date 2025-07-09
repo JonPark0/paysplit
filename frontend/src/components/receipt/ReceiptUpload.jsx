@@ -177,24 +177,8 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
   // Handle proceed to finish upload directly (save as-is)
   const handleProceed = async () => {
     try {
-      // Create receipt directly from OCR results without editing
-      const receiptData = {
-        totalAmount: ocrResult.total,
-        currency: 'KRW',
-        payerId: null, // Will need to be set by the user or default to current user
-        items: ocrResult.items.map(item => ({
-          name: item.name.trim(),
-          price: parseFloat(item.price),
-          quantity: parseInt(item.quantity) || 1,
-          category: item.category || 'other'
-        })),
-        ...(uploadResult && {
-          encryptedFilename: uploadResult.encryptedFilename,
-          originalFilename: uploadResult.originalFilename
-        })
-      }
-
       // For now, let's call the success callback with a flag to bypass editing
+      // The parent component will handle the actual saving with proper payerId
       if (onSuccess) {
         onSuccess({
           file: uploadResult,
