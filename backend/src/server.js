@@ -38,7 +38,7 @@ app.use(helmet({
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'https://beta.nphani.com'],
+  origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'https://paysplit.nphani.com'],
   credentials: true,
   optionsSuccessStatus: 200
 }))

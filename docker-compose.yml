@@ -33,7 +33,7 @@ services:
       - UPLOAD_PATH=/app/uploads
       - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-here}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-32-character-encryption-key-here}
-      - CORS_ORIGIN=${CORS_ORIGIN:-https://beta.nphani.com}
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://paysplit.nphani.com}
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-900000}
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100}
       - CLEANUP_INTERVAL=${CLEANUP_INTERVAL:-86400000}
