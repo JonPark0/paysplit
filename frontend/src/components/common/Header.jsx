@@ -154,22 +154,23 @@ const Header = () => {
                   </div>
                 )}
               </>
-            ) : (
-              <nav className="flex items-center space-x-6">
-                <button
-                  onClick={() => navigate(`/${language}/features`)}
-                  className="text-neutral-600 hover:text-neutral-900 text-sm font-medium transition-colors"
-                >
-                  {t('navigation.features')}
-                </button>
-                <button
-                  onClick={() => navigate(`/${language}/help`)}
-                  className="text-neutral-600 hover:text-neutral-900 text-sm font-medium transition-colors"
-                >
-                  {t('navigation.help')}
-                </button>
-              </nav>
             )}
+            
+            {/* Always show Features and Help navigation */}
+            <nav className="flex items-center space-x-6">
+              <button
+                onClick={() => navigate(`/${language}/features`)}
+                className="text-neutral-600 hover:text-neutral-900 text-sm font-medium transition-colors"
+              >
+                {t('navigation.features')}
+              </button>
+              <button
+                onClick={() => navigate(`/${language}/help`)}
+                className="text-neutral-600 hover:text-neutral-900 text-sm font-medium transition-colors"
+              >
+                {t('navigation.help')}
+              </button>
+            </nav>
             
             <button
               onClick={toggleLanguage}
@@ -227,28 +228,25 @@ const Header = () => {
               </button>
             )}
 
-            {!isRoomPage && (
-              <>
-                <button
-                  onClick={() => {
-                    navigate(`/${language}/features`)
-                    setIsMenuOpen(false)
-                  }}
-                  className="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 rounded-md"
-                >
-                  {t('navigation.features')}
-                </button>
-                <button
-                  onClick={() => {
-                    navigate(`/${language}/help`)
-                    setIsMenuOpen(false)
-                  }}
-                  className="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 rounded-md"
-                >
-                  {t('navigation.help')}
-                </button>
-              </>
-            )}
+            {/* Always show Features and Help in mobile navigation */}
+            <button
+              onClick={() => {
+                navigate(`/${language}/features`)
+                setIsMenuOpen(false)
+              }}
+              className="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 rounded-md"
+            >
+              {t('navigation.features')}
+            </button>
+            <button
+              onClick={() => {
+                navigate(`/${language}/help`)
+                setIsMenuOpen(false)
+              }}
+              className="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 rounded-md"
+            >
+              {t('navigation.help')}
+            </button>
             
             <button
               onClick={toggleLanguage}
