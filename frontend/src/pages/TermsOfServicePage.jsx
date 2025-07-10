@@ -426,7 +426,7 @@ const TermsOfServicePage = () => {
               <ul className="space-y-2 text-neutral-700">
                 <li className="flex items-start">
                   <CheckCircle className="w-4 h-4 text-secondary-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <span><strong>우선 순위:</strong> 개별 약정 > 이용약관 > 관련 법령</span>
+                  <span><strong>우선 순위:</strong> 개별 약정 &gt; 이용약관 &gt; 관련 법령</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-4 h-4 text-secondary-600 mr-2 mt-0.5 flex-shrink-0" />

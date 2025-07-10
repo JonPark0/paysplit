@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Menu, X, Globe, Home, ChevronDown } from 'lucide-react'
+import { Menu, X, Globe, ChevronDown } from 'lucide-react'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useRoomStore } from '../../stores/roomStore'
 
@@ -154,7 +154,7 @@ const Header = () => {
                   </div>
                 )}
               </>
-            )}
+            ) : null}
             
             {/* Always show Features and Help navigation */}
             <nav className="flex items-center space-x-6">
