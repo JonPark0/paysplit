@@ -1,86 +1,136 @@
-# PaySplit - 더치페이 계산 서비스
+# PaySplit - Smart Bill Splitting Service
 
-PaySplit은 더치페이 계산을 편리하게 해주는 웹 애플리케이션입니다.
+PaySplit은 영수증 기반 더치페이 계산을 위한 웹 애플리케이션입니다.
 
-## 주요 기능
+- 방 생성/참여 기반 협업 정산
+- OCR 기반 영수증 항목 추출
+- 항목별/균등/수동 분할
+- 정산 진행 상태 및 활동 로그 관리
+- PWA 지원
 
-- 📱 **반응형 디자인**: 데스크탑 및 모바일 지원
-- 🌐 **다국어 지원**: 한국어, 영어
-- 📷 **OCR 지원**: 영수증 자동 인식
-- 💰 **스마트 분할**: 다양한 분할 방식 지원
-- 🔐 **보안**: 파일 암호화 및 사용자 인증
-- 📱 **PWA**: 모바일 앱 수준의 경험
+## Tech Stack
 
-## 기술 스택
+- Frontend: React + Vite + TypeScript + PWA
+- Backend: Node.js 24 + Express
+- Database: PostgreSQL 18
+- Infra: Docker + Docker Compose
+- OCR: Gemini API 또는 OLLAMA (Tesseract fallback)
 
-- **Frontend**: React + Vite + PWA
-- **Backend**: Node.js + Express
-- **Database**: PostgreSQL 18
-- **Infrastructure**: Docker + Docker Compose
-- **OCR**: Tesseract.js
+## Quick Start
 
-## 시작하기
+### 1) Clone
 
-### 요구사항
-
-- Docker & Docker Compose
-- Node.js 24+ (개발 환경)
-
-### 설치 및 실행
-
-1. 저장소 클론
 ```bash
 git clone <repository-url>
 cd paysplit
 ```
 
-2. 환경 변수 설정
+### 2) Environment
+
 ```bash
 cp .env.example .env
-# .env 파일을 편집하여 필요한 설정 입력
 ```
 
-3. 컨테이너 빌드 및 실행
+최소 필수 설정값:
+
+- `JWT_SECRET`
+- `ENCRYPTION_KEY` (32자 이상)
+- `POSTGRES_PASSWORD`
+
+OCR까지 사용하려면 추가 설정:
+
+- Gemini 사용: `OCR_PROVIDER=gemini`, `GEMINI_API_KEY`
+- OLLAMA 사용: `OCR_PROVIDER=ollama`, `OLLAMA_URL`, `OLLAMA_MODEL`
+
+### 3) Run (Docker)
+
 ```bash
-docker-compose up --build
+docker compose up -d --build
 ```
 
-4. 브라우저에서 접속
-- Frontend: http://localhost:8081
-- Backend API: http://localhost:3002
+접속 주소:
 
-## 개발 환경 설정
+- Frontend: `http://localhost:8081`
+- Backend: `http://localhost:3002`
+- Health: `http://localhost:3002/api/health`
 
-### Frontend 개발
+중지:
+
+```bash
+docker compose down
+```
+
+## Development
+
+### Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Backend 개발
+검증:
+
+```bash
+npm run typecheck
+npm run build
+```
+
+### Backend
+
 ```bash
 cd backend
 npm install
 npm run dev
 ```
 
-## 프로젝트 구조
+문법 체크:
 
+```bash
+node --check src/server.js
 ```
+
+## Operational Checks
+
+스택 기동 후 권장 점검:
+
+```bash
+docker compose ps
+curl -fsS http://localhost:3002/api/health
+curl -fsS http://localhost:8081
+```
+
+OCR 헬스:
+
+```bash
+curl -sS -o /tmp/ocr-health.out -w "%{http_code}" http://localhost:3002/api/ollama/health
+```
+
+- `200`: OCR provider 정상
+- `503`: OCR provider 미설정 또는 연결 실패 (핵심 서비스는 동작 가능)
+
+## Security and Reliability Notes
+
+- Room access는 DB 세션 매핑 기반으로 검증됩니다.
+- API/업로드 rate limiting이 적용됩니다.
+- 프로덕션에서 reCAPTCHA 누락 요청은 차단됩니다.
+- 파일 암호화는 AES-256-GCM 기반으로 동작합니다.
+- 서버는 필수 환경변수 누락 시 시작되지 않습니다.
+
+## Deployment Guide
+
+운영 배포 상세 절차/체크리스트는 `docs/DEPLOYMENT.md`를 참고하세요.
+
+## Project Structure
+
+```text
 paysplit/
-├── frontend/          # React 프론트엔드
-├── backend/           # Node.js 백엔드
-├── docker-compose.yml # PostgreSQL 포함 Docker 구성
-├── uploads/           # 암호화된 파일 저장소
-├── nginx/             # Nginx 설정
-└── README.md
+├── frontend/
+├── backend/
+├── uploads/
+├── docker-compose.yml
+├── .env.example
+└── docs/
+    └── DEPLOYMENT.md
 ```
-
-## 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 제공됩니다.
-
-## 기여
-
-버그 리포트나 기능 요청은 GitHub Issues를 통해 제출해 주세요.
