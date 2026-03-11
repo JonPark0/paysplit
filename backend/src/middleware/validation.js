@@ -95,7 +95,6 @@ export const splitSchemas = {
 // Settlement validation schemas
 export const settlementSchemas = {
   create: Joi.object({
-    roomId: Joi.string().uuid().required(),
     fromParticipantId: Joi.string().uuid().required(),
     toParticipantId: Joi.string().uuid().required(),
     amount: Joi.number().positive().required()

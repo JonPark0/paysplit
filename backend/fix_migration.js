@@ -1,7 +1,7 @@
 import Database from './src/utils/database.js';
 
 async function fixMigration() {
-    const db = new Database(process.env.DATABASE_PATH || '/app/database/paysplit.db');
+    const db = new Database(process.env.DATABASE_URL || 'postgresql://paysplit:paysplit@localhost:5432/paysplit');
     
     try {
         // Initialize database connection
@@ -17,7 +17,12 @@ async function fixMigration() {
         console.log('Re-ran migrations successfully');
         
         // Check what tables exist now
-        const tables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
+        const tables = await db.all(`
+            SELECT table_name AS name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+            ORDER BY table_name
+        `);
         console.log('Tables after fix:', tables.map(t => t.name));
         
         await db.close();

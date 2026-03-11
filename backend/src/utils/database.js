@@ -1,267 +1,255 @@
-import sqlite3 from 'sqlite3'
-import path from 'path'
-import fs from 'fs/promises'
+import { Pool, types } from 'pg'
 
-const { verbose } = sqlite3
-const sqlite = verbose()
+types.setTypeParser(20, (value) => Number.parseInt(value, 10))
+types.setTypeParser(1700, (value) => Number.parseFloat(value))
+
+const toPgPlaceholders = (sql, params) => {
+  if (!params || params.length === 0) {
+    return sql
+  }
+
+  let index = 0
+  return sql.replace(/\?/g, () => {
+    index += 1
+    return `$${index}`
+  })
+}
 
 class Database {
-    constructor(dbPath) {
-        this.dbPath = dbPath;
-        this.db = null;
+  constructor(connectionString) {
+    this.connectionString = connectionString
+    this.pool = null
+  }
+
+  async init() {
+    if (!this.connectionString) {
+      throw new Error('DATABASE_URL is required')
     }
 
-    async init() {
-        try {
-            // Ensure database directory exists
-            const dbDir = path.dirname(this.dbPath);
-            await fs.mkdir(dbDir, { recursive: true });
+    this.pool = new Pool({
+      connectionString: this.connectionString,
+      ssl: process.env.DATABASE_SSL === 'true'
+        ? { rejectUnauthorized: false }
+        : undefined
+    })
 
-            // Create database connection
-            this.db = new sqlite.Database(this.dbPath, (err) => {
-                if (err) {
-                    console.error('Error opening database:', err);
-                    throw err;
-                }
-                console.log('Connected to SQLite database');
-            });
+    const client = await this.pool.connect()
+    client.release()
 
-            // Enable foreign keys
-            await this.run('PRAGMA foreign_keys = ON');
-            
-            // Run migrations
-            await this.runMigrations();
-            
-            return this.db;
-        } catch (error) {
-            console.error('Database initialization failed:', error);
-            throw error;
-        }
-    }
+    console.log('Connected to PostgreSQL database')
+    await this.runMigrations()
 
-    async runMigrations() {
-        console.log('Running database migrations...');
-        
-        // Check if migrations table exists
-        await this.run(`
-            CREATE TABLE IF NOT EXISTS migrations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+    return this.pool
+  }
 
-        // Define migrations
-        const migrations = [
-            {
-                name: '001_create_tables',
-                statements: [
-                    `CREATE TABLE IF NOT EXISTS rooms (
-                        id TEXT PRIMARY KEY,
-                        name TEXT,
-                        admin_name TEXT NOT NULL,
-                        password_hash TEXT NOT NULL,
-                        entry_code TEXT NOT NULL,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        settlement_status TEXT DEFAULT 'active',
-                        expires_at DATETIME,
-                        language TEXT DEFAULT 'ko'
-                    )`,
-                    `CREATE TABLE IF NOT EXISTS participants (
-                        id TEXT PRIMARY KEY,
-                        room_id TEXT NOT NULL,
-                        name TEXT NOT NULL,
-                        password_hash TEXT NOT NULL,
-                        is_admin BOOLEAN DEFAULT FALSE,
-                        joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
-                    )`,
-                    `CREATE TABLE IF NOT EXISTS receipts (
-                        id TEXT PRIMARY KEY,
-                        room_id TEXT NOT NULL,
-                        uploader_id TEXT NOT NULL,
-                        original_filename TEXT,
-                        encrypted_filename TEXT,
-                        total_amount DECIMAL(10,2) NOT NULL,
-                        currency TEXT DEFAULT 'KRW',
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
-                        FOREIGN KEY (uploader_id) REFERENCES participants(id)
-                    )`,
-                    `CREATE TABLE IF NOT EXISTS receipt_items (
-                        id TEXT PRIMARY KEY,
-                        receipt_id TEXT NOT NULL,
-                        name TEXT NOT NULL,
-                        price DECIMAL(10,2) NOT NULL,
-                        quantity INTEGER DEFAULT 1,
-                        category TEXT,
-                        FOREIGN KEY (receipt_id) REFERENCES receipts(id) ON DELETE CASCADE
-                    )`,
-                    `CREATE TABLE IF NOT EXISTS splits (
-                        id TEXT PRIMARY KEY,
-                        item_id TEXT NOT NULL,
-                        participant_id TEXT NOT NULL,
-                        amount DECIMAL(10,2) NOT NULL,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (item_id) REFERENCES receipt_items(id) ON DELETE CASCADE,
-                        FOREIGN KEY (participant_id) REFERENCES participants(id)
-                    )`,
-                    `CREATE TABLE IF NOT EXISTS settlements (
-                        id TEXT PRIMARY KEY,
-                        room_id TEXT NOT NULL,
-                        from_participant_id TEXT NOT NULL,
-                        to_participant_id TEXT NOT NULL,
-                        amount DECIMAL(10,2) NOT NULL,
-                        status TEXT DEFAULT 'pending',
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        completed_at DATETIME,
-                        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
-                        FOREIGN KEY (from_participant_id) REFERENCES participants(id),
-                        FOREIGN KEY (to_participant_id) REFERENCES participants(id)
-                    )`,
-                    `CREATE TABLE IF NOT EXISTS activity_logs (
-                        id TEXT PRIMARY KEY,
-                        room_id TEXT NOT NULL,
-                        participant_id TEXT,
-                        action TEXT NOT NULL,
-                        details TEXT,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
-                    )`,
-                    `CREATE TABLE IF NOT EXISTS sessions (
-                        id TEXT PRIMARY KEY,
-                        room_id TEXT NOT NULL,
-                        participant_id TEXT NOT NULL,
-                        token TEXT NOT NULL,
-                        expires_at DATETIME NOT NULL,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
-                        FOREIGN KEY (participant_id) REFERENCES participants(id)
-                    )`
-                ]
-            },
-            {
-                name: '002_create_indexes',
-                sql: `
-                    -- 인덱스 생성
-                    CREATE INDEX IF NOT EXISTS idx_rooms_entry_code ON rooms(entry_code);
-                    CREATE INDEX IF NOT EXISTS idx_participants_room_id ON participants(room_id);
-                    CREATE INDEX IF NOT EXISTS idx_receipts_room_id ON receipts(room_id);
-                    CREATE INDEX IF NOT EXISTS idx_receipt_items_receipt_id ON receipt_items(receipt_id);
-                    CREATE INDEX IF NOT EXISTS idx_splits_item_id ON splits(item_id);
-                    CREATE INDEX IF NOT EXISTS idx_settlements_room_id ON settlements(room_id);
-                    CREATE INDEX IF NOT EXISTS idx_activity_logs_room_id ON activity_logs(room_id);
-                    CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
-                    CREATE INDEX IF NOT EXISTS idx_rooms_settlement_status ON rooms(settlement_status);
-                    CREATE INDEX IF NOT EXISTS idx_rooms_last_activity ON rooms(last_activity);
-                `
-            },
-            {
-                name: '003_add_payer_to_receipts',
-                statements: [
-                    `ALTER TABLE receipts ADD COLUMN payer_id TEXT`,
-                    `CREATE INDEX IF NOT EXISTS idx_receipts_payer_id ON receipts(payer_id)`
-                ]
-            }
-        ];
+  async runMigrations() {
+    console.log('Running database migrations...')
 
-        // Run each migration
-        for (const migration of migrations) {
-            const existing = await this.get(
-                'SELECT name FROM migrations WHERE name = ?',
-                [migration.name]
-            );
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS migrations (
+        id BIGSERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        executed_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `)
 
-            if (!existing) {
-                console.log(`Running migration: ${migration.name}`);
-                try {
-                    await this.run('BEGIN TRANSACTION');
-                    
-                    // Handle both old format (sql) and new format (statements)
-                    if (migration.statements) {
-                        // New format: array of statements
-                        for (const statement of migration.statements) {
-                            await this.run(statement);
-                        }
-                    } else if (migration.sql) {
-                        // Old format: single SQL string
-                        await this.run(migration.sql);
-                    }
-                    
-                    await this.run(
-                        'INSERT INTO migrations (name) VALUES (?)',
-                        [migration.name]
-                    );
-                    await this.run('COMMIT');
-                    console.log(`Migration ${migration.name} completed successfully`);
-                } catch (error) {
-                    console.error(`Migration ${migration.name} failed:`, error);
-                    await this.run('ROLLBACK');
-                    throw error;
-                }
-            }
+    const migrations = [
+      {
+        name: '001_create_tables',
+        statements: [
+          `CREATE TABLE IF NOT EXISTS rooms (
+            id TEXT PRIMARY KEY,
+            name TEXT,
+            admin_name TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            entry_code TEXT NOT NULL,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            last_activity TIMESTAMPTZ DEFAULT NOW(),
+            settlement_status TEXT DEFAULT 'active',
+            expires_at TIMESTAMPTZ,
+            language TEXT DEFAULT 'ko'
+          )`,
+          `CREATE TABLE IF NOT EXISTS participants (
+            id TEXT PRIMARY KEY,
+            room_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            is_admin BOOLEAN DEFAULT FALSE,
+            joined_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT participants_room_id_fkey
+              FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+          )`,
+          `CREATE TABLE IF NOT EXISTS receipts (
+            id TEXT PRIMARY KEY,
+            room_id TEXT NOT NULL,
+            uploader_id TEXT NOT NULL,
+            original_filename TEXT,
+            encrypted_filename TEXT,
+            total_amount NUMERIC(10,2) NOT NULL,
+            currency TEXT DEFAULT 'KRW',
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT receipts_room_id_fkey
+              FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+            CONSTRAINT receipts_uploader_id_fkey
+              FOREIGN KEY (uploader_id) REFERENCES participants(id)
+          )`,
+          `CREATE TABLE IF NOT EXISTS receipt_items (
+            id TEXT PRIMARY KEY,
+            receipt_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            price NUMERIC(10,2) NOT NULL,
+            quantity INTEGER DEFAULT 1,
+            category TEXT,
+            CONSTRAINT receipt_items_receipt_id_fkey
+              FOREIGN KEY (receipt_id) REFERENCES receipts(id) ON DELETE CASCADE
+          )`,
+          `CREATE TABLE IF NOT EXISTS splits (
+            id TEXT PRIMARY KEY,
+            item_id TEXT NOT NULL,
+            participant_id TEXT NOT NULL,
+            amount NUMERIC(10,2) NOT NULL,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT splits_item_id_fkey
+              FOREIGN KEY (item_id) REFERENCES receipt_items(id) ON DELETE CASCADE,
+            CONSTRAINT splits_participant_id_fkey
+              FOREIGN KEY (participant_id) REFERENCES participants(id)
+          )`,
+          `CREATE TABLE IF NOT EXISTS settlements (
+            id TEXT PRIMARY KEY,
+            room_id TEXT NOT NULL,
+            from_participant_id TEXT NOT NULL,
+            to_participant_id TEXT NOT NULL,
+            amount NUMERIC(10,2) NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            completed_at TIMESTAMPTZ,
+            CONSTRAINT settlements_room_id_fkey
+              FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+            CONSTRAINT settlements_from_participant_id_fkey
+              FOREIGN KEY (from_participant_id) REFERENCES participants(id),
+            CONSTRAINT settlements_to_participant_id_fkey
+              FOREIGN KEY (to_participant_id) REFERENCES participants(id)
+          )`,
+          `CREATE TABLE IF NOT EXISTS activity_logs (
+            id TEXT PRIMARY KEY,
+            room_id TEXT NOT NULL,
+            participant_id TEXT,
+            action TEXT NOT NULL,
+            details TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT activity_logs_room_id_fkey
+              FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+          )`,
+          `CREATE TABLE IF NOT EXISTS sessions (
+            id TEXT PRIMARY KEY,
+            room_id TEXT NOT NULL,
+            participant_id TEXT NOT NULL,
+            token TEXT NOT NULL,
+            expires_at TIMESTAMPTZ NOT NULL,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT sessions_room_id_fkey
+              FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+            CONSTRAINT sessions_participant_id_fkey
+              FOREIGN KEY (participant_id) REFERENCES participants(id)
+          )`
+        ]
+      },
+      {
+        name: '002_create_indexes',
+        statements: [
+          'CREATE INDEX IF NOT EXISTS idx_rooms_entry_code ON rooms(entry_code)',
+          'CREATE INDEX IF NOT EXISTS idx_participants_room_id ON participants(room_id)',
+          'CREATE INDEX IF NOT EXISTS idx_receipts_room_id ON receipts(room_id)',
+          'CREATE INDEX IF NOT EXISTS idx_receipt_items_receipt_id ON receipt_items(receipt_id)',
+          'CREATE INDEX IF NOT EXISTS idx_splits_item_id ON splits(item_id)',
+          'CREATE INDEX IF NOT EXISTS idx_settlements_room_id ON settlements(room_id)',
+          'CREATE INDEX IF NOT EXISTS idx_activity_logs_room_id ON activity_logs(room_id)',
+          'CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)',
+          'CREATE INDEX IF NOT EXISTS idx_rooms_settlement_status ON rooms(settlement_status)',
+          'CREATE INDEX IF NOT EXISTS idx_rooms_last_activity ON rooms(last_activity)'
+        ]
+      },
+      {
+        name: '003_add_payer_to_receipts',
+        statements: [
+          'ALTER TABLE receipts ADD COLUMN IF NOT EXISTS payer_id TEXT',
+          'CREATE INDEX IF NOT EXISTS idx_receipts_payer_id ON receipts(payer_id)',
+          `DO $$
+            BEGIN
+              IF NOT EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = 'receipts_payer_id_fkey'
+              ) THEN
+                ALTER TABLE receipts
+                ADD CONSTRAINT receipts_payer_id_fkey
+                FOREIGN KEY (payer_id) REFERENCES participants(id) ON DELETE SET NULL;
+              END IF;
+            END $$`
+        ]
+      }
+    ]
+
+    for (const migration of migrations) {
+      const existing = await this.get('SELECT name FROM migrations WHERE name = ?', [migration.name])
+
+      if (existing) {
+        continue
+      }
+
+      const client = await this.pool.connect()
+
+      try {
+        console.log(`Running migration: ${migration.name}`)
+        await client.query('BEGIN')
+
+        for (const statement of migration.statements) {
+          await client.query(statement)
         }
 
-        console.log('Database migrations completed');
+        await client.query('INSERT INTO migrations (name) VALUES ($1)', [migration.name])
+        await client.query('COMMIT')
+        console.log(`Migration ${migration.name} completed successfully`)
+      } catch (error) {
+        await client.query('ROLLBACK')
+        console.error(`Migration ${migration.name} failed:`, error)
+        throw error
+      } finally {
+        client.release()
+      }
     }
 
-    async run(sql, params = []) {
-        return new Promise((resolve, reject) => {
-            this.db.run(sql, params, function(err) {
-                if (err) {
-                    console.error('Database run error:', err);
-                    reject(err);
-                } else {
-                    resolve({ id: this.lastID, changes: this.changes });
-                }
-            });
-        });
-    }
+    console.log('Database migrations completed')
+  }
 
-    async get(sql, params = []) {
-        return new Promise((resolve, reject) => {
-            this.db.get(sql, params, (err, row) => {
-                if (err) {
-                    console.error('Database get error:', err);
-                    reject(err);
-                } else {
-                    resolve(row);
-                }
-            });
-        });
-    }
+  async run(sql, params = []) {
+    const query = toPgPlaceholders(sql, params)
+    const result = await this.pool.query(query, params)
 
-    async all(sql, params = []) {
-        return new Promise((resolve, reject) => {
-            this.db.all(sql, params, (err, rows) => {
-                if (err) {
-                    console.error('Database all error:', err);
-                    reject(err);
-                } else {
-                    resolve(rows);
-                }
-            });
-        });
+    return {
+      id: result.rows?.[0]?.id ?? null,
+      changes: result.rowCount ?? 0
     }
+  }
 
-    async close() {
-        return new Promise((resolve, reject) => {
-            if (this.db) {
-                this.db.close((err) => {
-                    if (err) {
-                        console.error('Error closing database:', err);
-                        reject(err);
-                    } else {
-                        console.log('Database connection closed');
-                        resolve();
-                    }
-                });
-            } else {
-                resolve();
-            }
-        });
+  async get(sql, params = []) {
+    const query = toPgPlaceholders(sql, params)
+    const result = await this.pool.query(query, params)
+    return result.rows[0] || null
+  }
+
+  async all(sql, params = []) {
+    const query = toPgPlaceholders(sql, params)
+    const result = await this.pool.query(query, params)
+    return result.rows
+  }
+
+  async close() {
+    if (this.pool) {
+      await this.pool.end()
+      console.log('Database connection closed')
     }
+  }
 }
 
 export default Database

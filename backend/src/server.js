@@ -1,17 +1,16 @@
+import 'dotenv/config'
 import express from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
 import compression from 'compression'
 import morgan from 'morgan'
-// Rate limiting removed - replaced by reCAPTCHA V3
-// import rateLimit from 'express-rate-limit'
-import dotenv from 'dotenv'
 import cron from 'node-cron'
 
 // Import utilities and services
 import Database from './utils/database.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/logger.js'
+import { createRateLimiter } from './middleware/rateLimit.js'
 import { cleanupExpiredRooms } from './services/cleanup.js'
 
 // Import routes
@@ -21,14 +20,39 @@ import settlementRoutes from './routes/settlements.js'
 import archiveRoutes from './routes/archive.js'
 import ollamaRoutes from './routes/ollama.js'
 
-// Load environment variables
-dotenv.config()
-
 const app = express()
 const PORT = process.env.PORT || 3002
 
+const validateEnvironment = () => {
+  const required = ['JWT_SECRET', 'ENCRYPTION_KEY', 'DATABASE_URL']
+  const missing = required.filter((name) => !process.env[name])
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`)
+  }
+
+  if (process.env.ENCRYPTION_KEY.length < 32) {
+    throw new Error('ENCRYPTION_KEY must be at least 32 characters long')
+  }
+
+  if (process.env.NODE_ENV === 'production' && process.env.RECAPTCHA_REQUIRED !== 'false' && !process.env.RECAPTCHA_SECRET_KEY) {
+    throw new Error('RECAPTCHA_SECRET_KEY is required in production')
+  }
+}
+
+if (process.env.TRUST_PROXY) {
+  const parsedTrustProxy = Number(process.env.TRUST_PROXY)
+  const trustProxyValue = Number.isNaN(parsedTrustProxy)
+    ? process.env.TRUST_PROXY === 'true'
+      ? true
+      : process.env.TRUST_PROXY
+    : parsedTrustProxy
+
+  app.set('trust proxy', trustProxyValue)
+}
+
 // Initialize database
-const db = new Database(process.env.DATABASE_PATH || './database/paysplit.db')
+const db = new Database(process.env.DATABASE_URL)
 
 // Security middleware (disable CSP for backend API only)
 app.use(helmet({
@@ -58,9 +82,6 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(requestLogger)
 }
 
-// Rate limiting replaced by reCAPTCHA V3 - see middleware/recaptcha.js
-// Individual routes now use reCAPTCHA verification instead of global rate limiting
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -72,12 +93,33 @@ app.get('/api/health', (req, res) => {
   })
 })
 
+const apiRateLimitWindow = Number(process.env.RATE_LIMIT_WINDOW || 15 * 60 * 1000)
+const apiRateLimitMax = Number(process.env.RATE_LIMIT_MAX || 120)
+const uploadRateLimitMax = Number(process.env.UPLOAD_RATE_LIMIT_MAX || 20)
+
+const apiRateLimiter = createRateLimiter({
+  name: 'api',
+  windowMs: apiRateLimitWindow,
+  max: apiRateLimitMax,
+  skip: (req) => req.path === '/health'
+})
+
+const uploadRateLimiter = createRateLimiter({
+  name: 'upload',
+  windowMs: apiRateLimitWindow,
+  max: uploadRateLimitMax,
+  message: 'Too many upload attempts, please try again later'
+})
+
+app.use('/api', apiRateLimiter)
+app.use('/api/receipts/upload', uploadRateLimiter)
+
 // API routes - reCAPTCHA protection applied at individual route level
 app.use('/api/rooms', roomRoutes(db))
 app.use('/api/receipts', receiptRoutes(db))
 app.use('/api/settlements', settlementRoutes(db))
 app.use('/api/archive', archiveRoutes(db))
-app.use('/api/ollama', ollamaRoutes)
+app.use('/api/ollama', ollamaRoutes(db))
 
 // 404 handler
 app.use(notFoundHandler)
@@ -112,6 +154,8 @@ process.on('SIGINT', async () => {
 // Start server
 async function startServer() {
   try {
+    validateEnvironment()
+
     // Initialize database
     await db.init()
     console.log('Database initialized successfully')

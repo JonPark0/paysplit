@@ -7,13 +7,25 @@ export class FileEncryption {
   constructor() {
     this.algorithm = 'aes-256-gcm'
     this.keyLength = 32 // 256 bits
-    this.ivLength = 16  // 128 bits
+    this.ivLength = 12  // 96 bits (recommended for GCM)
+    this.versionPrefix = Buffer.from('PS2')
     this.tagLength = 16 // 128 bits
-    this.key = this.generateKey()
+    this.key = null
+  }
+
+  getKey() {
+    if (!this.key) {
+      this.key = this.generateKey()
+    }
+
+    return this.key
   }
 
   generateKey() {
-    const keyString = process.env.ENCRYPTION_KEY || 'default-encryption-key-change-in-production'
+    const keyString = process.env.ENCRYPTION_KEY
+    if (!keyString || keyString.length < 32) {
+      throw new Error('ENCRYPTION_KEY must be set and at least 32 characters long')
+    }
     return crypto.createHash('sha256').update(keyString).digest()
   }
 
@@ -23,7 +35,7 @@ export class FileEncryption {
       const iv = crypto.randomBytes(this.ivLength)
       
       // Create cipher
-      const cipher = crypto.createCipher(this.algorithm, this.key, iv)
+      const cipher = crypto.createCipheriv(this.algorithm, this.getKey(), iv)
       
       // Encrypt the file
       const encrypted = Buffer.concat([
@@ -35,7 +47,7 @@ export class FileEncryption {
       const authTag = cipher.getAuthTag()
       
       // Combine IV, authTag, and encrypted data
-      const result = Buffer.concat([iv, authTag, encrypted])
+      const result = Buffer.concat([this.versionPrefix, iv, authTag, encrypted])
       
       // Generate encrypted filename
       const ext = path.extname(originalFilename)
@@ -56,22 +68,35 @@ export class FileEncryption {
 
   async decryptFile(encryptedBuffer) {
     try {
-      // Extract IV, authTag, and encrypted data
-      const iv = encryptedBuffer.slice(0, this.ivLength)
-      const authTag = encryptedBuffer.slice(this.ivLength, this.ivLength + this.tagLength)
-      const encrypted = encryptedBuffer.slice(this.ivLength + this.tagLength)
-      
-      // Create decipher
-      const decipher = crypto.createDecipher(this.algorithm, this.key, iv)
+      const hasV2Prefix = encryptedBuffer.subarray(0, this.versionPrefix.length).equals(this.versionPrefix)
+
+      if (hasV2Prefix) {
+        const payload = encryptedBuffer.subarray(this.versionPrefix.length)
+        const iv = payload.slice(0, this.ivLength)
+        const authTag = payload.slice(this.ivLength, this.ivLength + this.tagLength)
+        const encrypted = payload.slice(this.ivLength + this.tagLength)
+
+        const decipher = crypto.createDecipheriv(this.algorithm, this.getKey(), iv)
+        decipher.setAuthTag(authTag)
+
+        return Buffer.concat([
+          decipher.update(encrypted),
+          decipher.final()
+        ])
+      }
+
+      // Backward compatibility for legacy encrypted files
+      const legacyIvLength = 16
+      const authTag = encryptedBuffer.slice(legacyIvLength, legacyIvLength + this.tagLength)
+      const encrypted = encryptedBuffer.slice(legacyIvLength + this.tagLength)
+
+      const decipher = crypto.createDecipher(this.algorithm, this.getKey())
       decipher.setAuthTag(authTag)
-      
-      // Decrypt the file
-      const decrypted = Buffer.concat([
+
+      return Buffer.concat([
         decipher.update(encrypted),
         decipher.final()
       ])
-      
-      return decrypted
     } catch (error) {
       console.error('File decryption failed:', error)
       throw new Error('File decryption failed')

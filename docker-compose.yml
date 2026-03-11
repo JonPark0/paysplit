@@ -1,4 +1,24 @@
 services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: paysplit-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-paysplit}
+      - POSTGRES_USER=${POSTGRES_USER:-paysplit}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-paysplit}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - paysplit-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-paysplit} -d ${POSTGRES_DB:-paysplit}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   frontend:
     build: ./frontend
     container_name: paysplit-frontend
@@ -23,23 +43,34 @@ services:
     container_name: paysplit-backend
     ports:
       - "${BACKEND_PORT:-3002}:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
-      - ./database:/app/database
       - ./uploads:/app/uploads
     environment:
       - NODE_ENV=production
-      - PORT=${BACKEND_PORT:-3002}
-      - DATABASE_PATH=/app/database/paysplit.db
+      - PORT=3002
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-paysplit}:${POSTGRES_PASSWORD:-paysplit}@postgres:5432/${POSTGRES_DB:-paysplit}
+      - DATABASE_SSL=${DATABASE_SSL:-false}
       - UPLOAD_PATH=/app/uploads
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-here}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-32-character-encryption-key-here}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - CORS_ORIGIN=${CORS_ORIGIN:-https://paysplit.nphani.com}
+      - TRUST_PROXY=${TRUST_PROXY:-1}
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-900000}
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100}
+      - UPLOAD_RATE_LIMIT_MAX=${UPLOAD_RATE_LIMIT_MAX:-20}
       - CLEANUP_INTERVAL=${CLEANUP_INTERVAL:-86400000}
       - DATA_RETENTION_DAYS=${DATA_RETENTION_DAYS:-30}
       - MAX_FILE_SIZE=${MAX_FILE_SIZE:-10485760}
+      - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
+      - RECAPTCHA_THRESHOLD=${RECAPTCHA_THRESHOLD:-0.5}
+      - RECAPTCHA_REQUIRED=${RECAPTCHA_REQUIRED:-true}
+      - RECAPTCHA_TIMEOUT_MS=${RECAPTCHA_TIMEOUT_MS:-5000}
       - OCR_PROVIDER=${OCR_PROVIDER:-gemini}
+      - OCR_REQUEST_TIMEOUT_MS=${OCR_REQUEST_TIMEOUT_MS:-20000}
+      - OCR_MAX_IMAGE_BYTES=${OCR_MAX_IMAGE_BYTES:-8388608}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.0-flash}
       - GEMINI_OCR_PROMPT=${GEMINI_OCR_PROMPT}
@@ -63,7 +94,5 @@ networks:
     external: true
     
 volumes:
-  database_data:
-    driver: local
-  uploads_data:
+  postgres_data:
     driver: local

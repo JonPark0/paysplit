@@ -9,6 +9,8 @@ export const verifyRecaptcha = (action = 'submit') => {
   return async (req, res, next) => {
     try {
       const { recaptchaToken } = req.body
+      const isProduction = process.env.NODE_ENV === 'production'
+      const isRecaptchaRequired = process.env.RECAPTCHA_REQUIRED !== 'false'
       
       // Skip verification in test environment
       if (process.env.NODE_ENV === 'test') {
@@ -17,13 +19,19 @@ export const verifyRecaptcha = (action = 'submit') => {
       
       // Check if reCAPTCHA is enabled
       if (!process.env.RECAPTCHA_SECRET_KEY) {
+        if (isProduction && isRecaptchaRequired) {
+          return next(new AppError('reCAPTCHA is not configured on server', 503))
+        }
         console.warn('reCAPTCHA not configured, skipping verification')
         return next()
       }
       
-      // Validate token presence - allow null/undefined for development or when reCAPTCHA fails to load
+      // Validate token presence
       if (!recaptchaToken) {
-        console.warn('reCAPTCHA token not provided, allowing request to proceed (development mode or reCAPTCHA load failure)')
+        if (isProduction && isRecaptchaRequired) {
+          return next(new AppError('reCAPTCHA token is required', 400))
+        }
+        console.warn('reCAPTCHA token not provided, allowing request to proceed in non-production mode')
         return next()
       }
       
@@ -35,13 +43,22 @@ export const verifyRecaptcha = (action = 'submit') => {
         remoteip: req.ip
       })
       
+      const controller = new AbortController()
+      const timeoutMs = Number(process.env.RECAPTCHA_TIMEOUT_MS || 5000)
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
       const response = await fetch(verificationURL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: verificationData
-      })
+        body: verificationData,
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId))
+
+      if (!response.ok) {
+        console.error('reCAPTCHA verification endpoint error:', response.status)
+        return next(new AppError('reCAPTCHA verification service unavailable', 503))
+      }
       
       const verificationResult = await response.json()
       

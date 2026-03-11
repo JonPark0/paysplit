@@ -1,5 +1,5 @@
 # Backend Dockerfile
-FROM node:18-alpine
+FROM node:24-alpine
 
 # Install curl for health checks
 RUN apk add --no-cache curl
@@ -16,7 +16,7 @@ RUN npm ci --only=production
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p /app/database /app/uploads
+RUN mkdir -p /app/uploads
 
 # Set permissions
 RUN chown -R node:node /app

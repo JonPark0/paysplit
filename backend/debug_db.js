@@ -1,10 +1,15 @@
 import Database from './src/utils/database.js';
 
 async function checkDatabase() {
-    const db = new Database(process.env.DATABASE_PATH || '/app/database/paysplit.db');
+    const db = new Database(process.env.DATABASE_URL || 'postgresql://paysplit:paysplit@localhost:5432/paysplit');
     await db.init();
     
-    const tables = await db.all("SELECT name FROM sqlite_master WHERE type='table';");
+    const tables = await db.all(`
+      SELECT table_name AS name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+      ORDER BY table_name
+    `);
     console.log('Tables:', tables);
     
     for (const table of tables) {

@@ -15,7 +15,7 @@ PaySplit은 더치페이 계산을 편리하게 해주는 웹 애플리케이션
 
 - **Frontend**: React + Vite + PWA
 - **Backend**: Node.js + Express
-- **Database**: SQLite
+- **Database**: PostgreSQL 18
 - **Infrastructure**: Docker + Docker Compose
 - **OCR**: Tesseract.js
 
@@ -24,7 +24,7 @@ PaySplit은 더치페이 계산을 편리하게 해주는 웹 애플리케이션
 ### 요구사항
 
 - Docker & Docker Compose
-- Node.js 18+ (개발 환경)
+- Node.js 24+ (개발 환경)
 
 ### 설치 및 실행
 
@@ -71,10 +71,10 @@ npm run dev
 paysplit/
 ├── frontend/          # React 프론트엔드
 ├── backend/           # Node.js 백엔드
-├── database/          # SQLite 데이터베이스
+├── docker-compose.yml # PostgreSQL 포함 Docker 구성
 ├── uploads/           # 암호화된 파일 저장소
 ├── nginx/             # Nginx 설정
-└── docker-compose.yml # Docker 구성
+└── README.md
 ```
 
 ## 라이선스

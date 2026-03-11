@@ -70,6 +70,15 @@ export default function(db) {
       const { roomId } = req.params
       const { participant } = req
 
+      // Check if settlements are in progress
+      const hasActiveSettlements = await checkActiveSettlements(roomId)
+      if (hasActiveSettlements) {
+        return res.status(409).json({
+          error: 'Receipt modification not allowed',
+          message: 'Cannot upload receipts while settlements are in progress. Please complete or cancel settlements first.'
+        })
+      }
+
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' })
       }
@@ -221,6 +230,15 @@ export default function(db) {
       const { roomId, receiptId } = req.params
       const { participant } = req
       const { items, totalAmount } = req.body
+
+      // Check if settlements are in progress
+      const hasActiveSettlements = await checkActiveSettlements(roomId)
+      if (hasActiveSettlements) {
+        return res.status(409).json({
+          error: 'Receipt modification not allowed',
+          message: 'Cannot update receipts while settlements are in progress. Please complete or cancel settlements first.'
+        })
+      }
 
       // Get existing receipt
       const receipt = await receiptModel.findById(receiptId)
