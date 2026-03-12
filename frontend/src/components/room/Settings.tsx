@@ -225,7 +225,7 @@ const Settings = ({ roomId, onClose }) => {
                   disabled={loading}
                   leftIcon={<RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />}
                 >
-                  {t('common.recalculate')}
+                  {t('common.refresh')}
                 </Button>
               </div>
 
@@ -255,7 +255,7 @@ const Settings = ({ roomId, onClose }) => {
                           <div className="flex items-center space-x-2 mt-1 text-xs text-neutral-500">
                             <Clock className="w-3 h-3" />
                             <span>
-                              {new Date(log.createdAt).toLocaleString('ko-KR')}
+                              {new Date(log.createdAt).toLocaleString(language === 'ko' ? 'ko-KR' : 'en-US')}
                             </span>
                             {log.participantName && (
                               <>

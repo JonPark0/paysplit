@@ -351,7 +351,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-medium text-neutral-900">{item.name}</h4>
                     <div className="text-sm text-neutral-600">
-                      {formatCurrency(item.price, 'KRW')} × {t('splitManager.itemCount', { count: item.quantity })}
+                      {formatCurrency(item.price, 'KRW')} × {item.quantity}
                       {getRemainingQuantity(item.id) > 0 && (
                         <span className="ml-2 text-yellow-600">
                           {t('splitPage.remainingQty', { count: getRemainingQuantity(item.id) })}

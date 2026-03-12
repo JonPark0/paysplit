@@ -24,6 +24,7 @@
     "backToRoom": "뒤로가기",
     "settlementManagement": "정산관리",
     "recalculate": "재계산",
+    "refresh": "새로고침",
     "me": "나"
   },
   "navigation": {
@@ -189,8 +190,8 @@
   },
   "footer": {
     "brand": "PaySplit",
-    "madeWith": "Made with",
-    "forBillSplitting": "for easier bill splitting",
+    "madeWith": "정산을 더 쉽게 만들기 위해",
+    "forBillSplitting": "정성을 담아 만들었습니다",
     "links": "링크",
     "privacy": "개인정보 처리방침",
     "terms": "이용약관",
@@ -499,7 +500,7 @@
     "receiptLabel": "영수증 #{{id}}",
     "splitDone": "분할 완료",
     "splitPending": "분할 대기",
-    "itemCount": "총 {{count}}개 항목",
+    "itemCount": "{{count}}개 항목",
     "moreItems": "+{{count}}개 더",
     "editSplit": "분할 수정",
     "doSplit": "분할하기",
