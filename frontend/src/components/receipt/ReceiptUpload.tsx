@@ -160,13 +160,13 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
         setUploadStep('review')
       } catch (ocrError) {
         console.error('OCR retry failed:', ocrError)
-        toast.error('분석을 다시 시도하는 중 오류가 발생했습니다')
+          toast.error(t('receiptUpload.retryError'))
         
         // Show failed OCR result
         setOcrResult({
           items: [],
           total: 0,
-          validation: { isValid: false, issues: ['다시 시도했지만 분석에 실패했습니다'], score: 0 }
+          validation: { isValid: false, issues: [t('receiptUpload.retryFailedIssue')], score: 0 }
         })
         setUploadStep('review')
       }
@@ -192,7 +192,7 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
       }
     } catch (error) {
       console.error('Failed to save receipt directly:', error)
-      toast.error('영수증 저장에 실패했습니다')
+      toast.error(t('roomPage.receiptSaveFailed'))
     }
   }
 
@@ -275,7 +275,7 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
 
           {/* Manual Entry Option */}
           <div className="text-center">
-            <p className="text-neutral-600 mb-4">또는</p>
+            <p className="text-neutral-600 mb-4">{t('receiptUpload.or')}</p>
             <Button
               variant="outline"
               onClick={handleManualEntry}
@@ -302,7 +302,7 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
         <div className="text-center py-12">
           <LoadingSpinner size="xl" className="mb-4" />
           <h3 className="text-lg font-medium text-neutral-900 mb-2">
-            파일 업로드 중...
+            {t('receiptUpload.uploading')}
           </h3>
           <div className="w-full bg-neutral-200 rounded-full h-2 mb-4">
             <div
@@ -310,7 +310,7 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
-          <p className="text-neutral-600">{uploadProgress}% 완료</p>
+          <p className="text-neutral-600">{t('receiptUpload.progressDone', { progress: uploadProgress })}</p>
         </div>
       )}
 
@@ -327,7 +327,7 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
               style={{ width: `${ocrProgress}%` }}
             />
           </div>
-          <p className="text-neutral-600">영수증 내용을 분석하고 있습니다...</p>
+          <p className="text-neutral-600">{t('receiptUpload.analyzing')}</p>
         </div>
       )}
 
@@ -338,7 +338,7 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
           <div className="bg-white border border-neutral-200 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-neutral-900">
-                분석 결과
+                {t('receiptUpload.resultTitle')}
               </h3>
               <div className={`flex items-center space-x-2 ${
                 ocrResult.validation.isValid ? 'text-secondary-600' : 'text-yellow-600'
@@ -349,7 +349,7 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
                   <AlertCircle className="w-5 h-5" />
                 )}
                 <span className="text-sm font-medium">
-                  {ocrResult.validation.score}% 정확도
+                  {t('receiptUpload.accuracy', { score: ocrResult.validation.score })}
                 </span>
               </div>
             </div>
@@ -357,7 +357,7 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
             {/* Items Found */}
             <div className="mb-4">
               <p className="text-sm text-neutral-600 mb-2">
-                감지된 항목: {ocrResult.items.length}개
+                {t('receiptUpload.detectedItems', { count: ocrResult.items.length })}
               </p>
               {ocrResult.items.length > 0 && (
                 <div className="bg-neutral-50 rounded-lg p-3">
@@ -366,13 +366,13 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
                       <span className="text-sm text-neutral-700">{item.name}</span>
                       <span className="text-sm font-medium">
                         {item.quantity > 1 && `${item.quantity}x `}
-                        {item.price.toLocaleString()}원
+                         {item.price.toLocaleString()} {t('currency.krw')}
                       </span>
                     </div>
                   ))}
                   {ocrResult.items.length > 3 && (
                     <p className="text-xs text-neutral-500 mt-2">
-                      +{ocrResult.items.length - 3}개 항목 더...
+                       {t('receiptUpload.moreItems', { count: ocrResult.items.length - 3 })}
                     </p>
                   )}
                 </div>
@@ -381,9 +381,9 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
 
             {/* Total Amount */}
             <div className="flex justify-between items-center py-2 border-t border-neutral-200">
-              <span className="font-medium text-neutral-900">총액</span>
+              <span className="font-medium text-neutral-900">{t('splitManager.totalAmount')}</span>
               <span className="text-lg font-bold text-neutral-900">
-                {ocrResult.total.toLocaleString()}원
+                {ocrResult.total.toLocaleString()} {t('currency.krw')}
               </span>
             </div>
 
@@ -391,7 +391,7 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
             {ocrResult.validation.issues.length > 0 && (
               <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm font-medium text-yellow-800 mb-1">
-                  확인 필요:
+                  {t('splitPage.needsReview')}:
                 </p>
                 <ul className="text-sm text-yellow-700 space-y-1">
                   {ocrResult.validation.issues.map((issue, index) => (
@@ -409,20 +409,20 @@ const ReceiptUpload = ({ roomId, onSuccess, onCancel }) => {
               className="flex-1"
               rightIcon={<Check className="w-4 h-4" />}
             >
-              계속 진행
+               {t('receiptUpload.continue')}
             </Button>
             <Button
               variant="outline"
               onClick={handleRetry}
             >
-              다시 시도
+               {t('receipt.upload.retry')}
             </Button>
             <Button
               variant="outline"
               onClick={handleViewDetails}
               leftIcon={<FileText className="w-4 h-4" />}
             >
-              자세히 보기
+               {t('receiptUpload.viewDetails')}
             </Button>
           </div>
         </div>

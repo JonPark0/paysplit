@@ -30,10 +30,10 @@ const NotFoundPage = () => {
 
         {/* Content */}
         <h1 className="text-2xl font-bold text-neutral-900 mb-4">
-          페이지를 찾을 수 없습니다
+          {t('notFound.title')}
         </h1>
         <p className="text-neutral-600 mb-8">
-          요청하신 페이지가 존재하지 않거나 이동되었을 수 있습니다.
+          {t('notFound.description')}
         </p>
 
         {/* Actions */}
@@ -43,7 +43,7 @@ const NotFoundPage = () => {
             fullWidth
             leftIcon={<Home className="w-4 h-4" />}
           >
-            홈으로 돌아가기
+            {t('notFound.goHome')}
           </Button>
           <Button
             onClick={handleGoBack}
@@ -51,16 +51,16 @@ const NotFoundPage = () => {
             fullWidth
             leftIcon={<ArrowLeft className="w-4 h-4" />}
           >
-            이전 페이지로
+            {t('notFound.goBack')}
           </Button>
         </div>
 
         {/* Help */}
         <div className="mt-12 p-4 bg-neutral-100 rounded-lg">
           <p className="text-sm text-neutral-600">
-            문제가 계속 발생한다면 브라우저를 새로고침하거나 
+            {t('notFound.helpLine1')}
             <br />
-            다시 시도해보세요.
+            {t('notFound.helpLine2')}
           </p>
         </div>
       </div>

@@ -37,6 +37,165 @@
     "help": "Help",
     "language": "Language"
   },
+  "header": {
+    "otherRooms": "Other rooms",
+    "viewAllRooms": "View all rooms"
+  },
+  "recaptcha": {
+    "noticePrefix": "This site is protected by reCAPTCHA and the Google",
+    "privacy": "Privacy Policy",
+    "and": "and",
+    "terms": "Terms of Service",
+    "noticeSuffix": "apply."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you requested may not exist or may have moved.",
+    "goHome": "Back to home",
+    "goBack": "Back to previous page",
+    "helpLine1": "If the problem persists, refresh your browser",
+    "helpLine2": "and try again."
+  },
+  "helpPage": {
+    "title": "Help",
+    "introTitle": "PaySplit Help",
+    "introSubtitle": "Manage receipt splitting and settlements easily",
+    "introBody": "PaySplit helps groups split and settle shared expenses with transparency. Check the frequently asked questions below for common issues and solutions.",
+    "sections": [
+      {
+        "id": "getting-started",
+        "title": "Getting Started",
+        "items": [
+          { "question": "How do I create a room?", "answer": "Choose create room on the home page and enter room name/password." },
+          { "question": "How do I join a room?", "answer": "Enter the room entry code, your name, and the room password." },
+          { "question": "Can I rejoin with the same name?", "answer": "Yes. Use your existing password to reconnect as the same participant." }
+        ]
+      },
+      {
+        "id": "receipts",
+        "title": "Receipts",
+        "items": [
+          { "question": "OCR is not accurate", "answer": "Upload a clear, straight photo and review the parsed result in the editor." },
+          { "question": "Can I upload PDF files?", "answer": "Yes. PDFs go through manual editing flow instead of image OCR." },
+          { "question": "Can I edit uploaded receipts?", "answer": "Yes. You can adjust item names, prices, and quantities in receipt editor." }
+        ]
+      },
+      {
+        "id": "settlement",
+        "title": "Split & Settlement",
+        "items": [
+          { "question": "Which split modes are available?", "answer": "Equal split, itemized split, and manual amount input are supported." },
+          { "question": "How is settlement calculated?", "answer": "The app computes an optimized transfer plan from paid and split amounts." },
+          { "question": "Who marks settlement completed?", "answer": "Related participants can update each transfer item to completed." }
+        ]
+      }
+    ],
+    "supportTitle": "Need more help?",
+    "supportTips": [
+      "Ask the room admin",
+      "Refresh browser or clear cache and retry",
+      "Try another browser or device"
+    ],
+    "quickStartTitle": "Quick Start",
+    "viewFeatures": "View Features"
+  },
+  "privacyPage": {
+    "title": "Privacy Policy",
+    "subtitle": "Privacy Protection",
+    "updatedAt": "Last updated: Dec 2024",
+    "scope": "Scope: PaySplit service (palnarium.com)",
+    "sections": [
+      {
+        "id": "collection",
+        "title": "Data We Collect",
+        "items": [
+          "Participant name, password, and receipt/split data",
+          "Activity logs and session data for service operation",
+          "Minimal technical data such as browser language/device"
+        ]
+      },
+      {
+        "id": "usage",
+        "title": "How We Use Data",
+        "items": [
+          "Provide bill splitting and settlement functionality",
+          "Authenticate room access and maintain security",
+          "Support OCR processing and quality improvements"
+        ]
+      },
+      {
+        "id": "retention",
+        "title": "Retention & Deletion",
+        "items": [
+          "Automatically deleted one month after settlement completion",
+          "Deletion includes files, personal data, logs, and sessions",
+          "Download archive beforehand if needed"
+        ]
+      },
+      {
+        "id": "sharing",
+        "title": "Sharing & Disclosure",
+        "items": [
+          "We do not sell or provide personal data to third parties",
+          "Room information is shared only within the same room",
+          "Legal/security requests are handled with minimal scope"
+        ]
+      }
+    ]
+  },
+  "termsPage": {
+    "title": "Terms of Service",
+    "subtitle": "Service Terms",
+    "updatedAt": "Last updated: Dec 2024",
+    "scope": "Scope: PaySplit service (palnarium.com)",
+    "sections": [
+      {
+        "id": "overview",
+        "title": "Service Overview",
+        "items": [
+          "PaySplit is a web service for group expense split/settlement",
+          "Receipt OCR and settlement calculation features are provided",
+          "Features may change according to operational policy"
+        ]
+      },
+      {
+        "id": "eligibility",
+        "title": "Conditions of Use",
+        "items": [
+          "Provide accurate data and use at your own responsibility",
+          "Comply with applicable laws and these terms",
+          "Keep passwords and access credentials secure"
+        ]
+      },
+      {
+        "id": "prohibited",
+        "title": "Prohibited Conduct",
+        "items": [
+          "Automated abuse or actions harming service stability",
+          "False input or unauthorized access attempts",
+          "Any unlawful or rights-infringing behavior"
+        ]
+      },
+      {
+        "id": "liability",
+        "title": "Liability & Limitations",
+        "items": [
+          "OCR accuracy may vary by input quality",
+          "Users must verify final settlement amounts",
+          "We strive for fast recovery in case of incidents"
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "brand": "PaySplit",
+    "madeWith": "Made with",
+    "forBillSplitting": "for easier bill splitting",
+    "links": "Links",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "copyright": "Palnarium. All rights reserved."
+  },
   "home": {
     "title": "PaySplit",
     "subtitle": "Split bills with ease",
@@ -164,6 +323,7 @@
     "item": {
       "food": "Food",
       "drink": "Drink",
+      "dessert": "Dessert",
       "service": "Service",
       "tax": "Tax",
       "tip": "Tip",
@@ -193,15 +353,42 @@
   },
   "settlement": {
     "title": "Settlement Details",
+    "subtitle": "Room settlement and transfer management",
     "summary": "Settlement Summary",
     "transactions": "Transactions",
     "whoOwesWhom": "Who owes whom",
     "amount": "Amount",
     "status": "Status",
     "markComplete": "Mark Complete",
+    "markPaidSuccess": "Settlement marked as completed",
+    "markPaidError": "Failed to mark settlement as completed",
+    "recalculated": "Settlement recalculated",
+    "recalculateError": "Failed to recalculate settlement",
+    "loadError": "Failed to load settlement information",
     "pending": "Pending",
     "completed": "Completed",
+    "unknown": "Unknown",
     "noTransactions": "No transactions needed.",
+    "participantBalances": "Participant balances",
+    "noBalances": "No settlement data yet",
+    "receiveAmount": "Amount to receive",
+    "sendAmount": "Amount to send",
+    "optimalTransfers": "Optimal transfer plan",
+    "history": "Settlement history",
+    "totalReceiptAmount": "Total receipt amount",
+    "completedCount": "Completed settlements",
+    "pendingCount": "Pending settlements",
+    "transferCount": "Transfer count",
+    "table": {
+      "receipt": "Receipt",
+      "total": "Total",
+      "splitMethod": "Split method",
+      "status": "Status",
+      "createdAt": "Created at",
+      "receiptLabel": "Receipt #{{id}}",
+      "itemCount": "{{count}} items",
+      "itemized": "Itemized"
+    },
     "balance": {
       "youOwe": "You owe",
       "owesYou": "Owes you",
@@ -209,6 +396,171 @@
     },
     "optimize": "Optimized Settlement",
     "total": "Total {{count}} transaction(s)"
+  },
+  "roomSelector": {
+    "cannotEnterRoom": "Unable to enter the room",
+    "removeConfirm": "Remove \"{{roomName}}\" from your list?",
+    "defaultRoomName": "Room",
+    "removed": "Room removed from your list",
+    "entryCode": "Entry code",
+    "recentBadge": "Recent",
+    "roomWithCode": "Room {{code}}",
+    "participantCount": "{{count}} participants",
+    "receiptCount": "{{count}} receipts",
+    "emptyTitle": "No joined rooms yet",
+    "emptyDescription": "Create a new room or join an existing one",
+    "createOrJoin": "Create / Join room",
+    "myRooms": "My rooms",
+    "newRoom": "New room",
+    "searchPlaceholder": "Search by room name or entry code...",
+    "recentRooms": "Recent rooms",
+    "searchResults": "Search results",
+    "allRooms": "All rooms",
+    "roomCount": "{{count}}",
+    "pageInfo": "Page {{page}} / {{totalPages}}",
+    "noSearchResults": "No search results",
+    "noRooms": "No rooms"
+  },
+  "roomPage": {
+    "settlingAddBlocked": "You cannot add receipts while settlement is in progress. Complete or cancel settlement first.",
+    "settlingEditBlocked": "You cannot edit receipts while settlement is in progress. Complete or cancel settlement first.",
+    "addReceiptDisabled": "Cannot add receipts during settlement",
+    "editReceiptDisabled": "Cannot edit receipts during settlement",
+    "missingParticipant": "Current participant information is missing",
+    "invalidReceiptItems": "Receipt item data is invalid",
+    "noValidItems": "No valid items found. Please check item names and prices.",
+    "receiptSaved": "Receipt saved",
+    "receiptSaveFailed": "Failed to save receipt",
+    "settlementCalculated": "Settlement calculated",
+    "receiptFallback": "Receipt",
+    "splitAction": "Split",
+    "joinedOn": "Joined {{date}}"
+  },
+  "settingsPage": {
+    "logsLoadFailed": "Failed to load activity logs",
+    "archiveDownloadSuccess": "Archive download completed",
+    "archiveDownloadFailed": "Failed to download archive",
+    "userFallback": "User",
+    "roomInfoMissing": "Room information is unavailable",
+    "roomNameConfirmError": "Please enter the room name exactly",
+    "leaveSuccess": "You left the room",
+    "leaveFailed": "Failed to leave room",
+    "tabs": {
+      "logs": "Activity Logs",
+      "archive": "Archive"
+    },
+    "noLogs": "No activity yet",
+    "activity": {
+      "roomCreated": "Room created",
+      "participantJoined": "{{name}} joined",
+      "receiptUploaded": "Receipt uploaded ({{amount}})",
+      "receiptEdited": "Receipt edited",
+      "splitCreated": "Cost split created",
+      "splitUpdated": "Cost split updated",
+      "settlementUpdated": "Settlement status updated"
+    },
+    "archive": {
+      "title": "Data archive",
+      "description": "You can download all room data as a file. It includes activity logs and settlement information for transparency and record keeping.",
+      "fullTitle": "Full data archive",
+      "fullDescription": "Includes all room data (participants, receipts, split details, settlement results, and activity logs).",
+      "downloading": "Downloading...",
+      "downloadJson": "Download as JSON",
+      "summaryTitle": "Summary report",
+      "summaryDescription": "A concise report containing settlement results and key statistics.",
+      "downloadSummary": "Download summary report",
+      "securityNoticeTitle": "Data security notice",
+      "securityNotice1": "Downloaded files may contain personal information",
+      "securityNotice2": "Please keep files in a secure location",
+      "securityNotice3": "Data is automatically deleted from the server one month after settlement completion"
+    },
+    "leave": {
+      "description": "After leaving, you can no longer participate in this room.",
+      "adminTransfer": "If you are an admin, admin privileges are automatically transferred to another participant.",
+      "confirmTitle": "Confirmation",
+      "confirmDescription": "To leave the room, type the room name exactly below:",
+      "roomNameToType": "Room name to type:",
+      "confirmLabel": "Confirm room name",
+      "confirmPlaceholder": "Type the room name above exactly",
+      "cautionTitle": "Caution",
+      "caution1": "You will lose access to this room's data after leaving",
+      "caution2": "Leaving before settlement completion may affect settlement",
+      "caution3": "If an admin leaves, admin rights are transferred to another participant",
+      "caution4": "You will need the entry code to join again later"
+    }
+  },
+  "splitManager": {
+    "loadError": "Failed to load data",
+    "subtitle": "Select receipts to split costs and manage settlements",
+    "totalReceipts": "Total receipts",
+    "totalAmount": "Total amount",
+    "receiptList": "Receipt list",
+    "uploadFirst": "Please upload a receipt first",
+    "receiptLabel": "Receipt #{{id}}",
+    "splitDone": "Split completed",
+    "splitPending": "Split pending",
+    "itemCount": "{{count}} item(s)",
+    "moreItems": "+{{count}} more",
+    "editSplit": "Edit split",
+    "doSplit": "Split",
+    "viewSettlement": "View settlement",
+    "keyItems": "Key items:"
+  },
+  "shareModal": {
+    "codeHelp": "Other users can join the room by entering this code."
+  },
+  "splitPage": {
+    "totalMismatch": "Total mismatch. Difference: {{diff}}",
+    "itemQuantityExceeded": "{{name}}: quantity exceeded",
+    "zeroAmount": "{{name}}: amount is 0",
+    "checkSplit": "Please check split details",
+    "saved": "Split saved",
+    "saveFailed": "Failed to save split",
+    "receiptInfo": "Receipt info",
+    "totalLabel": "Total:",
+    "itemCountLabel": "Items:",
+    "participantsLabel": "Participants:",
+    "splitType": "Split type",
+    "equalDesc": "All participants pay equally",
+    "itemizedSplit": "Itemized split",
+    "itemizedDesc": "Set quantity per item for each participant",
+    "manualDesc": "Enter each participant amount manually",
+    "equalResult": "Equal split result",
+    "remainingQty": "(Remaining: {{count}})",
+    "qtyUnit": "qty",
+    "manualInput": "Manual amount input",
+    "summary": "Split summary",
+    "receiptTotal": "Receipt total",
+    "totalDiff": "Total difference: {{diff}}",
+    "adjustSplit": "Please adjust split amounts.",
+    "needsReview": "Needs review",
+    "save": "Save split"
+  },
+  "receiptUpload": {
+    "retryError": "An error occurred while retrying analysis",
+    "retryFailedIssue": "Retry failed to analyze",
+    "or": "or",
+    "uploading": "Uploading file...",
+    "progressDone": "{{progress}}% done",
+    "analyzing": "Analyzing receipt content...",
+    "resultTitle": "Analysis result",
+    "accuracy": "{{score}}% accuracy",
+    "detectedItems": "Detected items: {{count}}",
+    "moreItems": "+{{count}} more items...",
+    "continue": "Continue",
+    "viewDetails": "View details"
+  },
+  "receiptEditor": {
+    "minOneItem": "At least one item is required",
+    "checkInputs": "Please review your inputs",
+    "itemsTitle": "Item list",
+    "itemNamePlaceholder": "Enter item name",
+    "subtotal": "Subtotal",
+    "totalMismatchTitle": "Total and item sum do not match",
+    "totalMismatchDescription": "Please check item prices or add fees/tax as separate items.",
+    "uploadedFile": "Uploaded file",
+    "ocrResult": "OCR analysis result",
+    "accuracy": "Accuracy"
   },
   "errors": {
     "networkError": "Network error occurred",

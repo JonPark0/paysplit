@@ -145,12 +145,12 @@ const JoinPage = () => {
         <div className="bg-neutral-50 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between text-sm">
             <span className="text-neutral-600">{t('room.info.participants')}</span>
-            <span className="font-medium">{roomInfo.participantCount || 0}명</span>
+            <span className="font-medium">{t('roomSelector.participantCount', { count: roomInfo.participantCount || 0 })}</span>
           </div>
           {roomInfo.totalAmount > 0 && (
             <div className="flex items-center justify-between text-sm mt-2">
               <span className="text-neutral-600">{t('room.info.totalAmount')}</span>
-              <span className="font-medium">{roomInfo.totalAmount.toLocaleString()}원</span>
+              <span className="font-medium">{roomInfo.totalAmount.toLocaleString()} {t('currency.krw')}</span>
             </div>
           )}
         </div>

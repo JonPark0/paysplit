@@ -162,7 +162,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
 
     // Check if total matches receipt total
     if (Math.abs(grandTotal - receipt.totalAmount) > tolerance) {
-      newErrors.total = `총액이 맞지 않습니다. 차이: ${formatCurrency(grandTotal - receipt.totalAmount, 'KRW')}`
+      newErrors.total = t('splitPage.totalMismatch', { diff: formatCurrency(grandTotal - receipt.totalAmount, 'KRW') })
     }
 
     // For custom split, check item quantities
@@ -170,7 +170,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
       receipt.items.forEach(item => {
         const remaining = getRemainingQuantity(item.id)
         if (remaining < 0) {
-          newErrors[`item_${item.id}`] = `${item.name}: 수량이 초과되었습니다`
+          newErrors[`item_${item.id}`] = t('splitPage.itemQuantityExceeded', { name: item.name })
         }
       })
     }
@@ -179,7 +179,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
     participants.forEach(participant => {
       const amount = calculateParticipantTotal(participant.id)
       if (amount <= 0) {
-        newErrors[participant.id] = `${participant.name}: 금액이 0원입니다`
+        newErrors[participant.id] = t('splitPage.zeroAmount', { name: participant.name })
       }
     })
 
@@ -190,7 +190,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
   // Handle save split
   const handleSave = async () => {
     if (!validateSplit()) {
-      toast.error('분할 내용을 확인해주세요')
+      toast.error(t('splitPage.checkSplit'))
       return
     }
 
@@ -220,14 +220,14 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
 
       await roomAPI.createSplit(roomId, splitRequest)
       
-      toast.success('분할이 저장되었습니다')
+      toast.success(t('splitPage.saved'))
       
       if (onSuccess) {
         onSuccess()
       }
     } catch (error) {
       console.error('Failed to save split:', error)
-      toast.error(error.message || '분할 저장에 실패했습니다')
+      toast.error(error.message || t('splitPage.saveFailed'))
     } finally {
       setLoading(false)
     }
@@ -250,25 +250,25 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
       {/* Receipt Summary */}
       <div className="bg-white border border-neutral-200 rounded-lg p-6 mb-6">
         <h3 className="text-lg font-medium text-neutral-900 mb-4">
-          영수증 정보
+          {t('splitPage.receiptInfo')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex items-center">
             <DollarSign className="w-5 h-5 text-neutral-500 mr-2" />
-            <span className="text-sm text-neutral-600">총액:</span>
+            <span className="text-sm text-neutral-600">{t('splitPage.totalLabel')}</span>
             <span className="font-medium ml-2">
               {formatCurrency(receipt.totalAmount, 'KRW')}
             </span>
           </div>
           <div className="flex items-center">
             <Calculator className="w-5 h-5 text-neutral-500 mr-2" />
-            <span className="text-sm text-neutral-600">항목 수:</span>
-            <span className="font-medium ml-2">{receipt.items.length}개</span>
+            <span className="text-sm text-neutral-600">{t('splitPage.itemCountLabel')}</span>
+            <span className="font-medium ml-2">{t('splitManager.itemCount', { count: receipt.items.length })}</span>
           </div>
           <div className="flex items-center">
             <Users className="w-5 h-5 text-neutral-500 mr-2" />
-            <span className="text-sm text-neutral-600">참여자:</span>
-            <span className="font-medium ml-2">{participants.length}명</span>
+            <span className="text-sm text-neutral-600">{t('splitPage.participantsLabel')}</span>
+            <span className="font-medium ml-2">{t('roomSelector.participantCount', { count: participants.length })}</span>
           </div>
         </div>
       </div>
@@ -276,7 +276,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
       {/* Split Type Selection */}
       <div className="bg-white border border-neutral-200 rounded-lg p-6 mb-6">
         <h3 className="text-lg font-medium text-neutral-900 mb-4">
-          분할 방식
+          {t('splitPage.splitType')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
@@ -287,9 +287,9 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
                 : 'border-neutral-200 hover:border-neutral-300'
             }`}
           >
-            <div className="font-medium mb-2">균등 분할</div>
+            <div className="font-medium mb-2">{t('split.method.equal')}</div>
             <div className="text-sm text-neutral-600">
-              모든 참여자가 동일한 금액을 지불
+              {t('splitPage.equalDesc')}
             </div>
           </button>
           
@@ -301,9 +301,9 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
                 : 'border-neutral-200 hover:border-neutral-300'
             }`}
           >
-            <div className="font-medium mb-2">항목별 분할</div>
+            <div className="font-medium mb-2">{t('splitPage.itemizedSplit')}</div>
             <div className="text-sm text-neutral-600">
-              각 항목의 수량을 개별적으로 설정
+              {t('splitPage.itemizedDesc')}
             </div>
           </button>
           
@@ -315,9 +315,9 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
                 : 'border-neutral-200 hover:border-neutral-300'
             }`}
           >
-            <div className="font-medium mb-2">수동 입력</div>
+            <div className="font-medium mb-2">{t('split.method.manual')}</div>
             <div className="text-sm text-neutral-600">
-              각 참여자의 금액을 직접 입력
+              {t('splitPage.manualDesc')}
             </div>
           </button>
         </div>
@@ -329,7 +329,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
           {splitType === 'equal' && (
             <div className="bg-white border border-neutral-200 rounded-lg p-6">
               <h3 className="text-lg font-medium text-neutral-900 mb-4">
-                균등 분할 결과
+                {t('splitPage.equalResult')}
               </h3>
               <div className="space-y-4">
                 {participants.map(participant => (
@@ -351,10 +351,10 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-medium text-neutral-900">{item.name}</h4>
                     <div className="text-sm text-neutral-600">
-                      {formatCurrency(item.price, 'KRW')} × {item.quantity}개
+                      {formatCurrency(item.price, 'KRW')} × {t('splitManager.itemCount', { count: item.quantity })}
                       {getRemainingQuantity(item.id) > 0 && (
                         <span className="ml-2 text-yellow-600">
-                          (남은 수량: {getRemainingQuantity(item.id)})
+                          {t('splitPage.remainingQty', { count: getRemainingQuantity(item.id) })}
                         </span>
                       )}
                     </div>
@@ -377,7 +377,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
                             error={errors[`${participant.id}_${item.id}`]}
                             className="w-20"
                           />
-                          <span className="text-sm text-neutral-600">개</span>
+                          <span className="text-sm text-neutral-600">{t('splitPage.qtyUnit')}</span>
                           <span className="text-sm font-medium ml-auto">
                             {formatCurrency(splitData[participant.id]?.items.find(i => i.id === item.id)?.amount || 0, 'KRW')}
                           </span>
@@ -399,7 +399,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
           {splitType === 'manual' && (
             <div className="bg-white border border-neutral-200 rounded-lg p-6">
               <h3 className="text-lg font-medium text-neutral-900 mb-4">
-                수동 금액 입력
+                {t('splitPage.manualInput')}
               </h3>
               <div className="space-y-4">
                 {participants.map(participant => (
@@ -416,7 +416,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
                         error={errors[participant.id]}
                         className="w-32"
                       />
-                      <span className="text-sm text-neutral-600">원</span>
+                      <span className="text-sm text-neutral-600">{t('currency.krw')}</span>
                     </div>
                   </div>
                 ))}
@@ -430,7 +430,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
           {/* Total Summary */}
           <div className="bg-white border border-neutral-200 rounded-lg p-6">
             <h3 className="text-lg font-medium text-neutral-900 mb-4">
-              분할 요약
+              {t('splitPage.summary')}
             </h3>
             
             <div className="space-y-3">
@@ -445,13 +445,13 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
               
               <div className="border-t border-neutral-200 pt-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-600">계산된 총액</span>
+                  <span className="text-neutral-600">{t('receipt.edit.calculated')}</span>
                   <span className="font-medium">
                     {formatCurrency(calculateGrandTotal(), 'KRW')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-600">영수증 총액</span>
+                  <span className="text-neutral-600">{t('splitPage.receiptTotal')}</span>
                   <span className="text-lg font-bold">
                     {formatCurrency(receipt.totalAmount, 'KRW')}
                   </span>
@@ -465,10 +465,10 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
                   <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
                   <div className="text-sm">
                     <p className="font-medium text-yellow-800 mb-1">
-                      총액 차이: {formatCurrency(totalDifference, 'KRW')}
+                        {t('splitPage.totalDiff', { diff: formatCurrency(totalDifference, 'KRW') })}
                     </p>
                     <p className="text-yellow-700">
-                      분할 금액을 조정해주세요.
+                      {t('splitPage.adjustSplit')}
                     </p>
                   </div>
                 </div>
@@ -481,7 +481,7 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
             <div className="bg-accent-50 border border-accent-200 rounded-lg p-4">
               <div className="flex items-center mb-2">
                 <AlertCircle className="w-5 h-5 text-accent-600 mr-2" />
-                <span className="font-medium text-accent-800">확인 필요</span>
+                  <span className="font-medium text-accent-800">{t('splitPage.needsReview')}</span>
               </div>
               <div className="text-sm text-accent-700 space-y-1">
                 {Object.entries(errors).map(([key, message]) => (
@@ -501,8 +501,8 @@ const Split = ({ roomId, receipt, participants, onSuccess, onCancel }) => {
               size="lg"
               leftIcon={<Save className="w-4 h-4" />}
             >
-              분할 저장
-            </Button>
+               {t('splitPage.save')}
+             </Button>
             
             <Button
               variant="outline"

@@ -90,15 +90,15 @@ const RoomSelector = ({ onCreateNew }) => {
       navigate(`/${language}/room/${roomId}`)
     } catch (error) {
       console.error('Failed to switch to room:', error)
-      toast.error('방으로 이동할 수 없습니다')
+      toast.error(t('roomSelector.cannotEnterRoom'))
     }
   }
 
   // Handle room removal
   const handleRemoveRoom = (roomId, roomName) => {
-    if (window.confirm(`"${roomName || '방'}"을(를) 목록에서 제거하시겠습니까?`)) {
+    if (window.confirm(t('roomSelector.removeConfirm', { roomName: roomName || t('roomSelector.defaultRoomName') }))) {
       removeRoom(roomId)
-      toast.success('방이 목록에서 제거되었습니다')
+      toast.success(t('roomSelector.removed'))
     }
   }
 
@@ -112,15 +112,15 @@ const RoomSelector = ({ onCreateNew }) => {
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-neutral-900 group-hover:text-primary-600 transition-colors truncate">
-            {room.name || `방 ${room.entryCode}`}
+            {room.name || t('roomSelector.roomWithCode', { code: room.entryCode })}
           </h3>
-          <p className="text-sm text-neutral-500 mt-1">
-            입장 코드: {room.entryCode}
-          </p>
+            <p className="text-sm text-neutral-500 mt-1">
+              {t('roomSelector.entryCode')}: {room.entryCode}
+            </p>
           {isRecent && (
-            <span className="inline-block mt-1 px-2 py-1 text-xs bg-primary-100 text-primary-600 rounded">
-              최근 접속
-            </span>
+                <span className="inline-block mt-1 px-2 py-1 text-xs bg-primary-100 text-primary-600 rounded">
+                  {t('roomSelector.recentBadge')}
+                </span>
           )}
         </div>
         <div className="flex items-center space-x-2">
@@ -142,11 +142,11 @@ const RoomSelector = ({ onCreateNew }) => {
       <div className="flex items-center space-x-4 text-sm text-neutral-600">
         <div className="flex items-center">
           <Users className="w-4 h-4 mr-1" />
-          <span>{roomStats[room.id]?.participantCount || 0}명</span>
+          <span>{t('roomSelector.participantCount', { count: roomStats[room.id]?.participantCount || 0 })}</span>
         </div>
         <div className="flex items-center">
           <Receipt className="w-4 h-4 mr-1" />
-          <span>{roomStats[room.id]?.receiptCount || 0}개</span>
+          <span>{t('roomSelector.receiptCount', { count: roomStats[room.id]?.receiptCount || 0 })}</span>
         </div>
         {room.lastActivity && (
           <div className="flex items-center">
@@ -165,13 +165,13 @@ const RoomSelector = ({ onCreateNew }) => {
           <Users className="w-8 h-8 text-neutral-400" />
         </div>
         <h3 className="text-lg font-medium text-neutral-900 mb-2">
-          참여한 방이 없습니다
+          {t('roomSelector.emptyTitle')}
         </h3>
         <p className="text-neutral-600 mb-6">
-          새로운 방을 만들거나 기존 방에 참여해보세요
+          {t('roomSelector.emptyDescription')}
         </p>
         <Button onClick={onCreateNew} leftIcon={<ArrowRight className="w-4 h-4" />}>
-          방 만들기 / 참여하기
+          {t('roomSelector.createOrJoin')}
         </Button>
       </div>
     )
@@ -182,10 +182,10 @@ const RoomSelector = ({ onCreateNew }) => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-neutral-900">
-          내 방 목록
+          {t('roomSelector.myRooms')}
         </h2>
         <Button variant="outline" onClick={onCreateNew}>
-          새 방 만들기
+          {t('roomSelector.newRoom')}
         </Button>
       </div>
 
@@ -193,7 +193,7 @@ const RoomSelector = ({ onCreateNew }) => {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
         <Input
-          placeholder="방 이름이나 입장 코드로 검색..."
+          placeholder={t('roomSelector.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => handleSearchChange(e.target.value)}
           className="pl-10"
@@ -205,7 +205,7 @@ const RoomSelector = ({ onCreateNew }) => {
       {!searchQuery && recentRooms.length > 0 && (
         <div>
           <h3 className="text-lg font-medium text-neutral-900 mb-3">
-            최근 방
+            {t('roomSelector.recentRooms')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {recentRooms.map(room => (
@@ -219,14 +219,14 @@ const RoomSelector = ({ onCreateNew }) => {
       <div>
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-medium text-neutral-900">
-            {searchQuery ? '검색 결과' : '모든 방'}
+            {searchQuery ? t('roomSelector.searchResults') : t('roomSelector.allRooms')}
             <span className="ml-2 text-sm font-normal text-neutral-500">
-              ({roomsToShow.length}개)
+              ({t('roomSelector.roomCount', { count: roomsToShow.length })})
             </span>
           </h3>
           {totalPages > 1 && (
             <div className="text-sm text-neutral-500">
-              페이지 {currentPage} / {totalPages}
+              {t('roomSelector.pageInfo', { page: currentPage, totalPages })}
             </div>
           )}
         </div>
@@ -234,7 +234,7 @@ const RoomSelector = ({ onCreateNew }) => {
         {roomsToShow.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-neutral-600">
-              {searchQuery ? '검색 결과가 없습니다' : '방이 없습니다'}
+              {searchQuery ? t('roomSelector.noSearchResults') : t('roomSelector.noRooms')}
             </p>
           </div>
         ) : (

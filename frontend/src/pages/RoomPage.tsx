@@ -228,7 +228,7 @@ const RoomPage = () => {
   const handleAddReceipt = () => {
     // Check if settlements are active
     if (currentRoom?.settlementStatus === 'settling') {
-      toast.error('정산이 진행 중일 때는 영수증을 추가할 수 없습니다. 정산을 완료하거나 취소해주세요.')
+      toast.error(t('roomPage.settlingAddBlocked'))
       return
     }
     
@@ -247,7 +247,7 @@ const RoomPage = () => {
         const payerId = currentParticipant?.id || null
         
         if (!payerId) {
-          toast.error('현재 참가자 정보를 찾을 수 없습니다')
+          toast.error(t('roomPage.missingParticipant'))
           return
         }
         
@@ -256,7 +256,7 @@ const RoomPage = () => {
         
         // Ensure we have valid items data
         if (!uploadData.items || !Array.isArray(uploadData.items)) {
-          toast.error('영수증 항목 데이터가 올바르지 않습니다')
+          toast.error(t('roomPage.invalidReceiptItems'))
           return
         }
 
@@ -273,7 +273,7 @@ const RoomPage = () => {
         
         // Ensure we have at least one valid item
         if (validItems.length === 0) {
-          toast.error('유효한 항목이 없습니다. 항목명과 가격을 확인해주세요.')
+          toast.error(t('roomPage.noValidItems'))
           return
         }
 
@@ -295,7 +295,7 @@ const RoomPage = () => {
 
         console.log('Saving receipt with data:', receiptData)
         await receiptAPI.create(roomId, receiptData)
-        toast.success('영수증이 저장되었습니다')
+        toast.success(t('roomPage.receiptSaved'))
 
         const [receiptsResponse, settlementsResponse] = await Promise.all([
           receiptAPI.getAll(roomId),
@@ -314,7 +314,7 @@ const RoomPage = () => {
         } else if (error.message) {
           toast.error(error.message)
         } else {
-          toast.error('영수증 저장에 실패했습니다')
+          toast.error(t('roomPage.receiptSaveFailed'))
         }
       }
     } else {
@@ -344,7 +344,7 @@ const RoomPage = () => {
   const handleEditReceipt = (receipt) => {
     // Check if settlements are active
     if (currentRoom?.settlementStatus === 'settling') {
-      toast.error('정산이 진행 중일 때는 영수증을 수정할 수 없습니다. 정산을 완료하거나 취소해주세요.')
+      toast.error(t('roomPage.settlingEditBlocked'))
       return
     }
     
@@ -358,7 +358,7 @@ const RoomPage = () => {
       const response = await settlementAPI.calculate(roomId)
       console.log('Settlement calculation:', response)
       // TODO: Show settlement results
-      toast.success('Settlement calculated')
+      toast.success(t('roomPage.settlementCalculated'))
     } catch (error) {
       toast.error(error.message || t('errors.calculationError'))
     } finally {
@@ -487,7 +487,7 @@ const RoomPage = () => {
                     onClick={handleAddReceipt}
                     leftIcon={<Plus className="w-4 h-4" />}
                     disabled={currentRoom?.settlementStatus === 'settling'}
-                    title={currentRoom?.settlementStatus === 'settling' ? '정산 진행 중에는 영수증을 추가할 수 없습니다' : ''}
+                    title={currentRoom?.settlementStatus === 'settling' ? t('roomPage.addReceiptDisabled') : ''}
                   >
                     {t('receipt.upload.title')}
                   </Button>
@@ -506,7 +506,7 @@ const RoomPage = () => {
                     <Button 
                       onClick={handleAddReceipt}
                       disabled={currentRoom?.settlementStatus === 'settling'}
-                      title={currentRoom?.settlementStatus === 'settling' ? '정산 진행 중에는 영수증을 추가할 수 없습니다' : ''}
+                      title={currentRoom?.settlementStatus === 'settling' ? t('roomPage.addReceiptDisabled') : ''}
                     >
                       {t('receipt.upload.title')}
                     </Button>
@@ -520,7 +520,7 @@ const RoomPage = () => {
                       >
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-medium text-neutral-900 truncate">
-                            {receipt.originalFilename || 'Receipt'}
+                            {receipt.originalFilename || t('roomPage.receiptFallback')}
                           </h3>
                           <span className="text-sm text-neutral-500">
                             {formatCurrency(receipt.totalAmount, receipt.currency, language)}
@@ -535,7 +535,7 @@ const RoomPage = () => {
                             variant="outline"
                             onClick={() => handleEditReceipt(receipt)}
                             disabled={currentRoom?.settlementStatus === 'settling'}
-                            title={currentRoom?.settlementStatus === 'settling' ? '정산 진행 중에는 영수증을 수정할 수 없습니다' : ''}
+                            title={currentRoom?.settlementStatus === 'settling' ? t('roomPage.editReceiptDisabled') : ''}
                           >
                             {t('common.edit')}
                           </Button>
@@ -544,7 +544,7 @@ const RoomPage = () => {
                             variant="outline"
                             onClick={() => setActiveTab('splits')}
                           >
-                            Split
+                            {t('roomPage.splitAction')}
                           </Button>
                         </div>
                       </div>
@@ -591,11 +591,11 @@ const RoomPage = () => {
                   <p className="font-medium text-neutral-900">
                     {participant.name}
                     {participant.isAdmin && (
-                      <span className="ml-2 text-xs text-primary-600">Admin</span>
+                      <span className="ml-2 text-xs text-primary-600">{t('common.admin')}</span>
                     )}
                   </p>
                   <p className="text-sm text-neutral-500">
-                    Joined {new Date(participant.joinedAt).toLocaleDateString()}
+                    {t('roomPage.joinedOn', { date: new Date(participant.joinedAt).toLocaleDateString() })}
                   </p>
                 </div>
               </div>

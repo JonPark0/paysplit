@@ -78,7 +78,7 @@ const Settlement = ({ roomId, onBack }) => {
       setTotalReceiptAmount(response.totalReceiptAmount || 0)
     } catch (error) {
       console.error('Failed to load settlements:', error)
-      setError(error.message || '정산 정보를 불러오지 못했습니다')
+      setError(error.message || t('settlement.loadError'))
     } finally {
       setLoading(false)
     }
@@ -92,10 +92,10 @@ const Settlement = ({ roomId, onBack }) => {
       await roomAPI.recalculateSettlements(roomId)
       await loadSettlements()
       
-      toast.success('정산이 재계산되었습니다')
+      toast.success(t('settlement.recalculated'))
     } catch (error) {
       console.error('Failed to recalculate settlements:', error)
-      toast.error(error.message || '정산 재계산에 실패했습니다')
+      toast.error(error.message || t('settlement.recalculateError'))
     } finally {
       setRecalculating(false)
     }
@@ -107,10 +107,10 @@ const Settlement = ({ roomId, onBack }) => {
       await roomAPI.markSettlementAsPaid(roomId, settlementId)
       await loadSettlements()
       
-      toast.success('정산이 완료 처리되었습니다')
+      toast.success(t('settlement.markPaidSuccess'))
     } catch (error) {
       console.error('Failed to mark settlement as paid:', error)
-      toast.error(error.message || '정산 완료 처리에 실패했습니다')
+      toast.error(error.message || t('settlement.markPaidError'))
     }
   }
 
@@ -122,21 +122,21 @@ const Settlement = ({ roomId, onBack }) => {
           color: 'text-secondary-600',
           bg: 'bg-secondary-50',
           icon: CheckCircle,
-          text: '완료'
+          text: t('settlement.completed')
         }
       case 'pending':
         return {
           color: 'text-yellow-600',
           bg: 'bg-yellow-50',
           icon: Clock,
-          text: '대기중'
+          text: t('settlement.pending')
         }
       default:
         return {
           color: 'text-neutral-600',
           bg: 'bg-neutral-50',
           icon: AlertCircle,
-          text: '알 수 없음'
+          text: t('settlement.unknown')
         }
     }
   }
@@ -183,7 +183,7 @@ const Settlement = ({ roomId, onBack }) => {
             {t('settlement.title')}
           </h2>
           <p className="text-neutral-600 mt-1 text-sm sm:text-base">
-            방 정산 및 송금 관리
+            {t('settlement.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -214,7 +214,7 @@ const Settlement = ({ roomId, onBack }) => {
           <div className="flex items-center">
             <Calculator className="w-8 h-8 text-primary-600 mr-3" />
             <div>
-              <p className="text-sm text-neutral-600">총 영수증 금액</p>
+              <p className="text-sm text-neutral-600">{t('settlement.totalReceiptAmount')}</p>
               <p className="text-2xl font-bold text-neutral-900">
                 {formatCurrency(totalReceiptAmount, 'KRW')}
               </p>
@@ -226,7 +226,7 @@ const Settlement = ({ roomId, onBack }) => {
           <div className="flex items-center">
             <CheckCircle className="w-8 h-8 text-secondary-600 mr-3" />
             <div>
-              <p className="text-sm text-neutral-600">완료된 정산</p>
+              <p className="text-sm text-neutral-600">{t('settlement.completedCount')}</p>
               <p className="text-2xl font-bold text-neutral-900">
                 {completedSettlements}
               </p>
@@ -238,7 +238,7 @@ const Settlement = ({ roomId, onBack }) => {
           <div className="flex items-center">
             <Clock className="w-8 h-8 text-yellow-600 mr-3" />
             <div>
-              <p className="text-sm text-neutral-600">대기중인 정산</p>
+              <p className="text-sm text-neutral-600">{t('settlement.pendingCount')}</p>
               <p className="text-2xl font-bold text-neutral-900">
                 {pendingSettlements}
               </p>
@@ -250,7 +250,7 @@ const Settlement = ({ roomId, onBack }) => {
           <div className="flex items-center">
             <ArrowRight className="w-8 h-8 text-accent-600 mr-3" />
             <div>
-              <p className="text-sm text-neutral-600">송금 건수</p>
+              <p className="text-sm text-neutral-600">{t('settlement.transferCount')}</p>
               <p className="text-2xl font-bold text-neutral-900">
                 {transactions.length}
               </p>
@@ -263,12 +263,12 @@ const Settlement = ({ roomId, onBack }) => {
         {/* Balances */}
         <div className="bg-white border border-neutral-200 rounded-lg p-6">
           <h3 className="text-lg font-medium text-neutral-900 mb-4">
-            참여자별 잔액
+            {t('settlement.participantBalances')}
           </h3>
           
           {balances.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-neutral-500">아직 정산 내역이 없습니다</p>
+              <p className="text-neutral-500">{t('settlement.noBalances')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -290,8 +290,8 @@ const Settlement = ({ roomId, onBack }) => {
                       {formatCurrency(balance.balance, 'KRW')}
                     </div>
                     <div className="text-xs text-neutral-500">
-                      {balance.balance > 0 ? '받을 금액' : 
-                       balance.balance < 0 ? '보낼 금액' : '정산 완료'}
+                      {balance.balance > 0 ? t('settlement.receiveAmount') : 
+                       balance.balance < 0 ? t('settlement.sendAmount') : t('settlement.balance.settled')}
                     </div>
                   </div>
                 </div>
@@ -303,12 +303,12 @@ const Settlement = ({ roomId, onBack }) => {
         {/* Optimal Transactions */}
         <div className="bg-white border border-neutral-200 rounded-lg p-6">
           <h3 className="text-lg font-medium text-neutral-900 mb-4">
-            최적 송금 방법
+            {t('settlement.optimalTransfers')}
           </h3>
           
           {transactions.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-neutral-500">송금할 내역이 없습니다</p>
+              <p className="text-neutral-500">{t('settlement.noTransactions')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -344,7 +344,7 @@ const Settlement = ({ roomId, onBack }) => {
                         onClick={() => handleMarkAsPaid(transaction.id)}
                         leftIcon={<CheckCircle className="w-3 h-3" />}
                       >
-                        완료 처리
+                        {t('settlement.markComplete')}
                       </Button>
                     )}
                   </div>
@@ -359,18 +359,18 @@ const Settlement = ({ roomId, onBack }) => {
       {settlements.length > 0 && (
         <div className="mt-8 bg-white border border-neutral-200 rounded-lg p-6">
           <h3 className="text-lg font-medium text-neutral-900 mb-4">
-            정산 내역
+            {t('settlement.history')}
           </h3>
           
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-neutral-200">
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600">영수증</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600">총액</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600">분할 방식</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600">상태</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600">생성일</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-600">{t('settlement.table.receipt')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-600">{t('settlement.table.total')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-600">{t('settlement.table.splitMethod')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-600">{t('settlement.table.status')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-600">{t('settlement.table.createdAt')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -378,10 +378,10 @@ const Settlement = ({ roomId, onBack }) => {
                   <tr key={settlement.id} className="border-b border-neutral-100">
                     <td className="py-3 px-4">
                       <div className="font-medium text-neutral-900">
-                        영수증 #{settlement.receiptId}
+                        {t('settlement.table.receiptLabel', { id: settlement.receiptId })}
                       </div>
                       <div className="text-sm text-neutral-600">
-                        {settlement.receiptItems} 항목
+                        {t('settlement.table.itemCount', { count: settlement.receiptItems })}
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -391,8 +391,8 @@ const Settlement = ({ roomId, onBack }) => {
                     </td>
                     <td className="py-3 px-4">
                       <span className="text-sm text-neutral-600">
-                        {settlement.splitType === 'equal' ? '균등분할' :
-                         settlement.splitType === 'custom' ? '항목별' : '수동입력'}
+                        {settlement.splitType === 'equal' ? t('split.method.equal') :
+                         settlement.splitType === 'custom' ? t('settlement.table.itemized') : t('split.method.manual')}
                       </span>
                     </td>
                     <td className="py-3 px-4">

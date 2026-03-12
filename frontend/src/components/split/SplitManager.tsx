@@ -38,7 +38,7 @@ const SplitManager = ({ roomId, onBack }) => {
       setParticipants(participantsResponse.participants || [])
     } catch (error) {
       console.error('Failed to load data:', error)
-      setError(error.message || '데이터를 불러오지 못했습니다')
+      setError(error.message || t('splitManager.loadError'))
     } finally {
       setLoading(false)
     }
@@ -118,12 +118,12 @@ const SplitManager = ({ roomId, onBack }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-neutral-900">
-            {t('split.manager.title')}
-          </h2>
-          <p className="text-neutral-600 mt-1 text-sm sm:text-base">
-            영수증을 선택하여 분할하고 정산을 관리하세요
-          </p>
+            <h2 className="text-xl sm:text-2xl font-bold text-neutral-900">
+              {t('split.manager.title')}
+            </h2>
+            <p className="text-neutral-600 mt-1 text-sm sm:text-base">
+              {t('splitManager.subtitle')}
+            </p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
           <Button
@@ -153,7 +153,7 @@ const SplitManager = ({ roomId, onBack }) => {
           <div className="flex items-center">
             <Receipt className="w-8 h-8 text-primary-600 mr-3" />
             <div>
-              <p className="text-sm text-neutral-600">총 영수증</p>
+              <p className="text-sm text-neutral-600">{t('splitManager.totalReceipts')}</p>
               <p className="text-2xl font-bold text-neutral-900">
                 {receipts.length}
               </p>
@@ -165,7 +165,7 @@ const SplitManager = ({ roomId, onBack }) => {
           <div className="flex items-center">
             <Users className="w-8 h-8 text-secondary-600 mr-3" />
             <div>
-              <p className="text-sm text-neutral-600">참여자</p>
+              <p className="text-sm text-neutral-600">{t('room.info.participants')}</p>
               <p className="text-2xl font-bold text-neutral-900">
                 {participants.length}
               </p>
@@ -177,7 +177,7 @@ const SplitManager = ({ roomId, onBack }) => {
           <div className="flex items-center">
             <Calculator className="w-8 h-8 text-accent-600 mr-3" />
             <div>
-              <p className="text-sm text-neutral-600">총 금액</p>
+              <p className="text-sm text-neutral-600">{t('splitManager.totalAmount')}</p>
               <p className="text-2xl font-bold text-neutral-900">
                 {formatCurrency(
                   receipts.reduce((sum, receipt) => sum + receipt.totalAmount, 0),
@@ -192,15 +192,15 @@ const SplitManager = ({ roomId, onBack }) => {
       {/* Receipts List */}
       <div className="bg-white border border-neutral-200 rounded-lg p-6">
         <h3 className="text-lg font-medium text-neutral-900 mb-4">
-          영수증 목록
+          {t('splitManager.receiptList')}
         </h3>
 
         {receipts.length === 0 ? (
           <div className="text-center py-12">
             <Receipt className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
-            <p className="text-neutral-500 mb-2">아직 영수증이 없습니다</p>
+            <p className="text-neutral-500 mb-2">{t('receipt.empty.title')}</p>
             <p className="text-sm text-neutral-400">
-              먼저 영수증을 업로드해주세요
+              {t('splitManager.uploadFirst')}
             </p>
           </div>
         ) : (
@@ -214,21 +214,21 @@ const SplitManager = ({ roomId, onBack }) => {
                   <div className="flex-1">
                     <div className="flex items-center flex-wrap gap-2 mb-2">
                       <h4 className="font-medium text-neutral-900">
-                        영수증 #{receipt.id}
+                        {t('splitManager.receiptLabel', { id: receipt.id })}
                       </h4>
                       <div className={`px-2 py-1 rounded text-xs flex-shrink-0 ${
                         receipt.hasSplit 
                           ? 'bg-secondary-100 text-secondary-700' 
                           : 'bg-neutral-100 text-neutral-700'
                       }`}>
-                        {receipt.hasSplit ? '분할 완료' : '분할 대기'}
+                        {receipt.hasSplit ? t('splitManager.splitDone') : t('splitManager.splitPending')}
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-neutral-600">
                       <div className="flex items-center">
                         <Receipt className="w-4 h-4 mr-2" />
-                        <span>총 {receipt.items?.length || 0}개 항목</span>
+                        <span>{t('splitManager.itemCount', { count: receipt.items?.length || 0 })}</span>
                       </div>
                       <div className="flex items-center">
                         <Calculator className="w-4 h-4 mr-2" />
@@ -243,7 +243,7 @@ const SplitManager = ({ roomId, onBack }) => {
                     
                     {receipt.items && receipt.items.length > 0 && (
                       <div className="mt-3 p-3 bg-neutral-50 rounded-lg">
-                        <p className="text-sm font-medium text-neutral-700 mb-2">주요 항목:</p>
+                        <p className="text-sm font-medium text-neutral-700 mb-2">{t('splitManager.keyItems')}</p>
                         <div className="flex flex-wrap gap-2">
                           {receipt.items.slice(0, 3).map((item, index) => (
                             <span key={index} className="inline-flex items-center px-2 py-1 bg-white rounded text-xs text-neutral-600">
@@ -252,7 +252,7 @@ const SplitManager = ({ roomId, onBack }) => {
                           ))}
                           {receipt.items.length > 3 && (
                             <span className="inline-flex items-center px-2 py-1 bg-white rounded text-xs text-neutral-500">
-                              +{receipt.items.length - 3}개 더
+                            {t('splitManager.moreItems', { count: receipt.items.length - 3 })}
                             </span>
                           )}
                         </div>
@@ -266,7 +266,7 @@ const SplitManager = ({ roomId, onBack }) => {
                       size="sm"
                       className="whitespace-nowrap flex-1 sm:flex-initial"
                     >
-                      {receipt.hasSplit ? '분할 수정' : '분할하기'}
+                      {receipt.hasSplit ? t('splitManager.editSplit') : t('splitManager.doSplit')}
                     </Button>
                     
                     {receipt.hasSplit && (
@@ -276,7 +276,7 @@ const SplitManager = ({ roomId, onBack }) => {
                         size="sm"
                         className="whitespace-nowrap flex-1 sm:flex-initial"
                       >
-                        정산 보기
+                        {t('splitManager.viewSettlement')}
                       </Button>
                     )}
                   </div>

@@ -16,39 +16,39 @@ const Footer = () => {
           {/* About */}
           <div>
             <h3 className="text-sm font-semibold text-neutral-900 mb-4">
-              PaySplit
+              {t('footer.brand')}
             </h3>
             <p className="text-sm text-neutral-600 mb-4">
               {t('home.description')}
             </p>
             <div className="flex items-center text-sm text-neutral-500">
-              Made with <Heart className="w-4 h-4 mx-1 text-red-500" /> for easier bill splitting
+              {t('footer.madeWith')} <Heart className="w-4 h-4 mx-1 text-red-500" /> {t('footer.forBillSplitting')}
             </div>
           </div>
 
           {/* Links */}
           <div>
             <h3 className="text-sm font-semibold text-neutral-900 mb-4">
-              Links
+              {t('footer.links')}
             </h3>
             <div className="space-y-2">
               <button
                 onClick={() => navigate(`/${language}/help`)}
                 className="block text-sm text-neutral-600 hover:text-neutral-900 transition-colors text-left"
               >
-                도움말
+                {t('navigation.help')}
               </button>
               <button
                 onClick={() => navigate(`/${language}/privacy`)}
                 className="block text-sm text-neutral-600 hover:text-neutral-900 transition-colors text-left"
               >
-                개인정보 처리방침
+                {t('footer.privacy')}
               </button>
               <button
                 onClick={() => navigate(`/${language}/terms`)}
                 className="block text-sm text-neutral-600 hover:text-neutral-900 transition-colors text-left"
               >
-                이용약관
+                {t('footer.terms')}
               </button>
               <a
                 href="https://palnarium.com"
@@ -67,7 +67,7 @@ const Footer = () => {
         <div className="mt-8 pt-8 border-t border-neutral-200">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <p className="text-sm text-neutral-500">
-              © {currentYear} Palnarium. All rights reserved.
+              © {currentYear} {t('footer.copyright')}
             </p>
             <p className="text-sm text-neutral-500 mt-2 sm:mt-0">
               Version 1.0.0

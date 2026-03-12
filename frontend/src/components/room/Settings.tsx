@@ -51,7 +51,7 @@ const Settings = ({ roomId, onClose }) => {
       setLogs(response.logs || [])
     } catch (error) {
       console.error('Failed to load activity logs:', error)
-      toast.error('활동 로그를 불러오지 못했습니다')
+      toast.error(t('settingsPage.logsLoadFailed'))
     } finally {
       setLoading(false)
     }
@@ -75,10 +75,10 @@ const Settings = ({ roomId, onClose }) => {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
       
-      toast.success('아카이브 다운로드가 완료되었습니다')
+      toast.success(t('settingsPage.archiveDownloadSuccess'))
     } catch (error) {
       console.error('Failed to download archive:', error)
-      toast.error('아카이브 다운로드에 실패했습니다')
+      toast.error(t('settingsPage.archiveDownloadFailed'))
     } finally {
       setArchiving(false)
     }
@@ -105,19 +105,19 @@ const Settings = ({ roomId, onClose }) => {
   const getActivityDescription = (log) => {
     switch (log.action) {
       case 'room_created':
-        return `방이 생성되었습니다`
+        return t('settingsPage.activity.roomCreated')
       case 'participant_joined':
-        return `${log.details?.participantName || '사용자'}님이 참여했습니다`
+        return t('settingsPage.activity.participantJoined', { name: log.details?.participantName || t('settingsPage.userFallback') })
       case 'receipt_uploaded':
-        return `영수증이 업로드되었습니다 (${formatCurrency(log.details?.amount || 0, 'KRW')})`
+        return t('settingsPage.activity.receiptUploaded', { amount: formatCurrency(log.details?.amount || 0, 'KRW') })
       case 'receipt_edited':
-        return `영수증이 수정되었습니다`
+        return t('settingsPage.activity.receiptEdited')
       case 'split_created':
-        return `비용 분할이 생성되었습니다`
+        return t('settingsPage.activity.splitCreated')
       case 'split_updated':
-        return `비용 분할이 수정되었습니다`
+        return t('settingsPage.activity.splitUpdated')
       case 'settlement_updated':
-        return `정산 상태가 업데이트되었습니다`
+        return t('settingsPage.activity.settlementUpdated')
       default:
         return log.action
     }
@@ -125,14 +125,14 @@ const Settings = ({ roomId, onClose }) => {
 
   const handleLeaveRoom = async () => {
     if (!currentRoom || !currentParticipant) {
-      toast.error('방 정보를 불러올 수 없습니다')
+      toast.error(t('settingsPage.roomInfoMissing'))
       return
     }
 
     // Check if user typed the correct room name
     const roomNameToCheck = currentRoom.name || currentRoom.entryCode
     if (leaveRoomConfirmation.trim() !== roomNameToCheck) {
-      toast.error('방 이름을 정확히 입력해주세요')
+      toast.error(t('settingsPage.roomNameConfirmError'))
       return
     }
 
@@ -149,14 +149,14 @@ const Settings = ({ roomId, onClose }) => {
       // Close settings modal first
       onClose()
       
-      toast.success('방에서 나왔습니다')
+      toast.success(t('settingsPage.leaveSuccess'))
       
       // Navigate to home
       navigate(`/${language}`)
       
     } catch (error) {
       console.error('Failed to leave room:', error)
-      toast.error('방 나가기에 실패했습니다')
+      toast.error(t('settingsPage.leaveFailed'))
     } finally {
       setLeavingRoom(false)
     }
@@ -186,7 +186,7 @@ const Settings = ({ roomId, onClose }) => {
             }`}
           >
             <Activity className="w-4 h-4 inline mr-2" />
-            활동 로그
+            {t('settingsPage.tabs.logs')}
           </button>
           <button
             onClick={() => setActiveTab('archive')}
@@ -197,7 +197,7 @@ const Settings = ({ roomId, onClose }) => {
             }`}
           >
             <Download className="w-4 h-4 inline mr-2" />
-            아카이브
+            {t('settingsPage.tabs.archive')}
           </button>
           <button
             onClick={() => setActiveTab('leave')}
@@ -208,7 +208,7 @@ const Settings = ({ roomId, onClose }) => {
             }`}
           >
             <LogOut className="w-4 h-4 inline mr-2" />
-            방 나가기
+            {t('common.leaveRoom')}
           </button>
         </div>
 
@@ -217,7 +217,7 @@ const Settings = ({ roomId, onClose }) => {
           {activeTab === 'logs' && (
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-neutral-900">활동 로그</h3>
+                <h3 className="text-lg font-medium text-neutral-900">{t('settingsPage.tabs.logs')}</h3>
                 <Button
                   variant="outline"
                   size="sm"
@@ -225,7 +225,7 @@ const Settings = ({ roomId, onClose }) => {
                   disabled={loading}
                   leftIcon={<RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />}
                 >
-                  새로고침
+                  {t('common.recalculate')}
                 </Button>
               </div>
 
@@ -237,7 +237,7 @@ const Settings = ({ roomId, onClose }) => {
                 <div className="space-y-3">
                   {logs.length === 0 ? (
                     <div className="text-center py-8 text-neutral-500">
-                      아직 활동 내역이 없습니다
+                      {t('settingsPage.noLogs')}
                     </div>
                   ) : (
                     logs.map((log, index) => (
@@ -275,31 +275,30 @@ const Settings = ({ roomId, onClose }) => {
 
           {activeTab === 'archive' && (
             <div>
-              <h3 className="text-lg font-medium text-neutral-900 mb-4">데이터 아카이브</h3>
+              <h3 className="text-lg font-medium text-neutral-900 mb-4">{t('settingsPage.archive.title')}</h3>
               <p className="text-neutral-600 mb-6">
-                방의 모든 데이터를 파일로 다운로드할 수 있습니다. 
-                투명성과 기록 보관을 위해 모든 활동 내역과 정산 정보가 포함됩니다.
+                {t('settingsPage.archive.description')}
               </p>
 
               <div className="space-y-4">
                 <div className="border border-neutral-200 rounded-lg p-4">
-                  <h4 className="font-medium text-neutral-900 mb-2">전체 데이터 아카이브</h4>
+                  <h4 className="font-medium text-neutral-900 mb-2">{t('settingsPage.archive.fullTitle')}</h4>
                   <p className="text-sm text-neutral-600 mb-4">
-                    방의 모든 정보 (참여자, 영수증, 분할 내역, 정산 결과, 활동 로그)를 포함합니다.
+                    {t('settingsPage.archive.fullDescription')}
                   </p>
                   <Button
                     onClick={() => handleArchiveDownload('json')}
                     disabled={archiving}
                     leftIcon={<Download className="w-4 h-4" />}
                   >
-                    {archiving ? '다운로드 중...' : 'JSON 형식으로 다운로드'}
+                    {archiving ? t('settingsPage.archive.downloading') : t('settingsPage.archive.downloadJson')}
                   </Button>
                 </div>
 
                 <div className="border border-neutral-200 rounded-lg p-4">
-                  <h4 className="font-medium text-neutral-900 mb-2">요약 리포트</h4>
+                  <h4 className="font-medium text-neutral-900 mb-2">{t('settingsPage.archive.summaryTitle')}</h4>
                   <p className="text-sm text-neutral-600 mb-4">
-                    정산 결과와 주요 통계만 포함된 간단한 리포트입니다.
+                    {t('settingsPage.archive.summaryDescription')}
                   </p>
                   <Button
                     variant="outline"
@@ -307,17 +306,17 @@ const Settings = ({ roomId, onClose }) => {
                     disabled={archiving}
                     leftIcon={<FileText className="w-4 h-4" />}
                   >
-                    요약 리포트 다운로드
+                    {t('settingsPage.archive.downloadSummary')}
                   </Button>
                 </div>
               </div>
 
               <div className="mt-6 p-4 bg-neutral-50 rounded-lg">
-                <h4 className="font-medium text-neutral-900 mb-2">데이터 보안 안내</h4>
+                <h4 className="font-medium text-neutral-900 mb-2">{t('settingsPage.archive.securityNoticeTitle')}</h4>
                 <ul className="text-sm text-neutral-600 space-y-1">
-                  <li>• 다운로드된 파일에는 개인정보가 포함될 수 있습니다</li>
-                  <li>• 파일을 안전한 장소에 보관하시기 바랍니다</li>
-                  <li>• 정산 완료 후 1개월 뒤 서버에서 자동 삭제됩니다</li>
+                  <li>• {t('settingsPage.archive.securityNotice1')}</li>
+                  <li>• {t('settingsPage.archive.securityNotice2')}</li>
+                  <li>• {t('settingsPage.archive.securityNotice3')}</li>
                 </ul>
               </div>
             </div>
@@ -328,27 +327,27 @@ const Settings = ({ roomId, onClose }) => {
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-neutral-900 mb-2 flex items-center">
                   <AlertTriangle className="w-5 h-5 text-accent-600 mr-2" />
-                  방 나가기
+                  {t('common.leaveRoom')}
                 </h3>
                 <p className="text-neutral-600">
-                  방에서 나가면 더 이상 해당 방의 활동에 참여할 수 없습니다.
+                  {t('settingsPage.leave.description')}
                   {currentParticipant?.isAdmin && (
                     <span className="text-accent-600 font-medium">
-                      {' '}관리자 권한이 있는 경우 다른 참가자에게 관리자 권한이 자동으로 이전됩니다.
+                      {' '}{t('settingsPage.leave.adminTransfer')}
                     </span>
                   )}
                 </p>
               </div>
 
               <div className="border border-accent-200 rounded-lg p-6 bg-accent-50">
-                <h4 className="font-medium text-accent-900 mb-4">확인 절차</h4>
+                <h4 className="font-medium text-accent-900 mb-4">{t('settingsPage.leave.confirmTitle')}</h4>
                 <p className="text-accent-700 mb-4">
-                  방 나가기를 진행하려면 아래에 방 이름을 정확히 입력해주세요:
+                  {t('settingsPage.leave.confirmDescription')}
                 </p>
                 
                 <div className="mb-4">
                   <div className="text-sm text-neutral-600 mb-2">
-                    입력해야 할 방 이름:
+                    {t('settingsPage.leave.roomNameToType')}
                   </div>
                   <div className="font-mono text-sm bg-white p-2 rounded border border-accent-200">
                     {currentRoom?.name || currentRoom?.entryCode}
@@ -356,8 +355,8 @@ const Settings = ({ roomId, onClose }) => {
                 </div>
 
                 <Input
-                  label="방 이름 확인"
-                  placeholder="위의 방 이름을 정확히 입력하세요"
+                  label={t('settingsPage.leave.confirmLabel')}
+                  placeholder={t('settingsPage.leave.confirmPlaceholder')}
                   value={leaveRoomConfirmation}
                   onChange={(e) => setLeaveRoomConfirmation(e.target.value)}
                   className="mb-4"
@@ -373,7 +372,7 @@ const Settings = ({ roomId, onClose }) => {
                     }}
                     className="flex-1"
                   >
-                    취소
+                    {t('common.cancel')}
                   </Button>
                   <Button
                     onClick={handleLeaveRoom}
@@ -381,18 +380,18 @@ const Settings = ({ roomId, onClose }) => {
                     loading={leavingRoom}
                     className="flex-1 bg-accent-600 hover:bg-accent-700"
                   >
-                    방 나가기
+                    {t('common.leaveRoom')}
                   </Button>
                 </div>
               </div>
 
               <div className="mt-6 p-4 bg-neutral-50 rounded-lg">
-                <h4 className="font-medium text-neutral-900 mb-2">주의사항</h4>
+                <h4 className="font-medium text-neutral-900 mb-2">{t('settingsPage.leave.cautionTitle')}</h4>
                 <ul className="text-sm text-neutral-600 space-y-1">
-                  <li>• 방을 나가면 해당 방의 데이터에 접근할 수 없습니다</li>
-                  <li>• 정산이 완료되지 않은 상태에서 나가면 정산에 영향을 줄 수 있습니다</li>
-                  <li>• 관리자가 나가는 경우 다른 참가자에게 관리자 권한이 이전됩니다</li>
-                  <li>• 나중에 다시 참여하려면 입장 코드가 필요합니다</li>
+                  <li>• {t('settingsPage.leave.caution1')}</li>
+                  <li>• {t('settingsPage.leave.caution2')}</li>
+                  <li>• {t('settingsPage.leave.caution3')}</li>
+                  <li>• {t('settingsPage.leave.caution4')}</li>
                 </ul>
               </div>
             </div>

@@ -97,7 +97,7 @@ const ShareModal = ({ isOpen, onClose, roomData, qrData }) => {
               <div className="bg-white border border-neutral-200 rounded-lg p-4 mb-4 inline-block">
                 <img
                   src={qrData.qrCode}
-                  alt="QR Code"
+                  alt={t('room.share.qrCode')}
                   className="w-48 h-48"
                 />
               </div>
@@ -125,7 +125,7 @@ const ShareModal = ({ isOpen, onClose, roomData, qrData }) => {
                 </p>
               </div>
               <p className="text-sm text-neutral-600 mb-4">
-                다른 사용자가 이 코드를 입력하여 방에 참여할 수 있습니다.
+                {t('shareModal.codeHelp')}
               </p>
               <Button
                 onClick={() => copyToClipboard(qrData.entryCode)}

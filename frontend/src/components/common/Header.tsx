@@ -111,7 +111,7 @@ const Header = () => {
                       onClick={() => setShowRoomDropdown(!showRoomDropdown)}
                       className="btn-ghost text-sm flex items-center"
                     >
-                      다른 방
+                      {t('header.otherRooms')}
                       <ChevronDown className="w-4 h-4 ml-1" />
                     </button>
                     
@@ -119,7 +119,7 @@ const Header = () => {
                       <div className="absolute right-0 mt-2 w-64 bg-white border border-neutral-200 rounded-lg shadow-lg z-50">
                         <div className="p-2">
                           <div className="text-xs font-medium text-neutral-500 px-3 py-2">
-                            최근 방
+                            {t('roomSelector.recentRooms')}
                           </div>
                           {getRecentRooms().slice(0, 5).map(room => (
                             <button
@@ -130,7 +130,7 @@ const Header = () => {
                               }`}
                             >
                               <div className="font-medium truncate">
-                                {room.name || `방 ${room.entryCode}`}
+                                {room.name || t('roomSelector.roomWithCode', { code: room.entryCode })}
                               </div>
                               <div className="text-xs text-neutral-500">
                                 {room.entryCode}
@@ -145,7 +145,7 @@ const Header = () => {
                               }}
                               className="w-full text-left px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded transition-colors"
                             >
-                              모든 방 보기
+                              {t('header.viewAllRooms')}
                             </button>
                           </div>
                         </div>

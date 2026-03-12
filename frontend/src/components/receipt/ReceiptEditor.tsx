@@ -113,7 +113,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
   // Remove item
   const removeItem = (index) => {
     if (receiptData.items.length <= 1) {
-      toast.error('최소 하나의 항목이 필요합니다')
+      toast.error(t('receiptEditor.minOneItem'))
       return
     }
 
@@ -159,7 +159,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
   // Handle save
   const handleSave = async () => {
     if (!validateForm()) {
-      toast.error('입력 내용을 확인해주세요')
+      toast.error(t('receiptEditor.checkInputs'))
       return
     }
 
@@ -187,14 +187,14 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
 
       const response = await receiptAPI.create(roomId, receiptData_to_save)
       
-      toast.success('영수증이 저장되었습니다')
+      toast.success(t('roomPage.receiptSaved'))
       
       if (onSuccess) {
         onSuccess(response.receipt)
       }
     } catch (error) {
       console.error('Failed to save receipt:', error)
-      toast.error(error.message || '영수증 저장에 실패했습니다')
+      toast.error(error.message || t('roomPage.receiptSaveFailed'))
     } finally {
       setLoading(false)
     }
@@ -219,7 +219,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium text-neutral-900">
-              항목 목록
+               {t('receiptEditor.itemsTitle')}
             </h3>
             <Button
               variant="outline"
@@ -241,7 +241,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
                 <div className="sm:col-span-5">
                   <Input
                     label={index === 0 ? t('receipt.edit.itemName') : ''}
-                    placeholder="항목명을 입력하세요"
+                    placeholder={t('receiptEditor.itemNamePlaceholder')}
                     value={item.name}
                     onChange={(e) => handleItemChange(index, 'name', e.target.value)}
                     error={errors[`item_${index}`]?.name}
@@ -302,11 +302,11 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
                     value={item.category}
                     onChange={(e) => handleItemChange(index, 'category', e.target.value)}
                   >
-                    <option value="food">음식</option>
-                    <option value="drink">음료</option>
-                    <option value="dessert">디저트</option>
-                    <option value="service">서비스</option>
-                    <option value="other">기타</option>
+                    <option value="food">{t('receipt.item.food')}</option>
+                    <option value="drink">{t('receipt.item.drink')}</option>
+                    <option value="dessert">{t('receipt.item.dessert')}</option>
+                    <option value="service">{t('receipt.item.service')}</option>
+                    <option value="other">{t('receipt.item.other')}</option>
                   </select>
                 </div>
 
@@ -326,7 +326,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
 
               {/* Item Subtotal */}
               <div className="mt-2 text-right text-sm text-neutral-600">
-                소계: {formatCurrency((Number(item.price) || 0) * (Number(item.quantity) || 1), 'KRW')}
+                {t('receiptEditor.subtotal')}: {formatCurrency((Number(item.price) || 0) * (Number(item.quantity) || 1), 'KRW')}
               </div>
             </div>
           ))}
@@ -400,7 +400,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-neutral-600">총액</span>
+                <span className="text-neutral-600">{t('splitManager.totalAmount')}</span>
                 <span className="text-lg font-bold">
                   {formatCurrency(receiptData.total, 'KRW')}
                 </span>
@@ -424,8 +424,8 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
                 <div className="flex items-start">
                   <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
                   <div className="text-sm text-yellow-800">
-                    <p className="font-medium mb-1">총액과 항목 합계가 다릅니다</p>
-                    <p>항목 가격을 확인하거나 수수료/세금 등을 별도 항목으로 추가해주세요.</p>
+                    <p className="font-medium mb-1">{t('receiptEditor.totalMismatchTitle')}</p>
+                    <p>{t('receiptEditor.totalMismatchDescription')}</p>
                   </div>
                 </div>
               </div>
@@ -435,7 +435,7 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
           {/* Upload Info */}
           {uploadData?.file && (
             <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
-              <h4 className="font-medium text-neutral-900 mb-2">업로드된 파일</h4>
+              <h4 className="font-medium text-neutral-900 mb-2">{t('receiptEditor.uploadedFile')}</h4>
               <p className="text-sm text-neutral-600 break-all">
                 {uploadData.file.originalFilename}
               </p>
@@ -448,17 +448,17 @@ const ReceiptEditor = ({ roomId, uploadData, onSuccess, onCancel }) => {
           {/* OCR Info */}
           {uploadData?.ocrResult && (
             <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
-              <h4 className="font-medium text-neutral-900 mb-2">OCR 분석 결과</h4>
+              <h4 className="font-medium text-neutral-900 mb-2">{t('receiptEditor.ocrResult')}</h4>
               <div className="text-sm space-y-1">
                 <p className="text-neutral-600">
-                  정확도: {uploadData.ocrResult.validation?.score || 0}%
+                  {t('receiptEditor.accuracy')}: {uploadData.ocrResult.validation?.score || 0}%
                 </p>
                 <p className="text-neutral-600">
-                  감지된 항목: {uploadData.ocrResult.items?.length || 0}개
+                  {t('receiptUpload.detectedItems', { count: uploadData.ocrResult.items?.length || 0 })}
                 </p>
                 {uploadData.ocrResult.validation?.issues?.length > 0 && (
                   <div className="mt-2">
-                    <p className="text-xs text-yellow-600 font-medium">검토 필요:</p>
+                    <p className="text-xs text-yellow-600 font-medium">{t('splitPage.needsReview')}:</p>
                     {uploadData.ocrResult.validation.issues.map((issue, index) => (
                       <p key={index} className="text-xs text-yellow-600">• {issue}</p>
                     ))}

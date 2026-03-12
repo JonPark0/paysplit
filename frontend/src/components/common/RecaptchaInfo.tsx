@@ -17,25 +17,25 @@ const RecaptchaInfo = ({ className = '' }) => {
     <div className={`flex items-center text-xs text-neutral-500 ${className}`}>
       <Shield className="w-3 h-3 mr-1" />
       <span>
-        이 사이트는 reCAPTCHA로 보호되며 Google의{' '}
+        {t('recaptcha.noticePrefix')}{' '}
         <a 
           href="https://policies.google.com/privacy" 
           target="_blank" 
           rel="noopener noreferrer"
           className="text-primary-600 hover:underline"
         >
-          개인정보처리방침
+          {t('recaptcha.privacy')}
         </a>
-        {' '}및{' '}
+        {' '}{t('recaptcha.and')}{' '}
         <a 
           href="https://policies.google.com/terms" 
           target="_blank" 
           rel="noopener noreferrer"
           className="text-primary-600 hover:underline"
         >
-          서비스약관
+          {t('recaptcha.terms')}
         </a>
-        이 적용됩니다.
+        {t('recaptcha.noticeSuffix')}
       </span>
     </div>
   )
