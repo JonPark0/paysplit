@@ -88,10 +88,11 @@ npm install
 npm run dev
 ```
 
-문법 체크:
+검증:
 
 ```bash
-node --check src/server.js
+npm run typecheck
+npm run build
 ```
 
 ## Operational Checks
@@ -112,6 +113,16 @@ curl -sS -o /tmp/ocr-health.out -w "%{http_code}" http://localhost:3002/api/olla
 
 - `200`: OCR provider 정상
 - `503`: OCR provider 미설정 또는 연결 실패 (핵심 서비스는 동작 가능)
+
+통합 스모크 테스트:
+
+```bash
+./scripts/smoke-compose.sh
+```
+
+- 프론트/백엔드 컨테이너 빌드 및 기동
+- Backend `/api/health`, Frontend `/` 응답 확인
+- OCR health 상태코드(`200` 또는 `503`) 확인
 
 ## Security and Reliability Notes
 

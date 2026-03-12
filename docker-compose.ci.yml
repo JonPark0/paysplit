@@ -1,0 +1,14 @@
+services:
+  frontend:
+    networks:
+      - paysplit-network
+
+  backend:
+    networks:
+      - paysplit-network
+
+networks:
+  nginx-proxy-manager_npm-network:
+    external: false
+    name: paysplit-ci-npm-network
+    driver: bridge
