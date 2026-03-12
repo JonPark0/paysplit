@@ -1,5 +1,7 @@
 # PaySplit - Smart Bill Splitting Service
 
+[![CI](https://github.com/JonPark0/paysplit/actions/workflows/ci.yml/badge.svg)](https://github.com/JonPark0/paysplit/actions/workflows/ci.yml)
+
 PaySplit은 영수증 기반 더치페이 계산을 위한 웹 애플리케이션입니다.
 
 - 방 생성/참여 기반 협업 정산
