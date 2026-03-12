@@ -8,16 +8,36 @@ import LoadingSpinner from '../common/LoadingSpinner'
 import { roomAPI } from '../../services/api'
 import { formatCurrency } from '../../utils/currency'
 
+interface BalanceItem {
+  id?: string
+  name?: string
+  participantName?: string
+  balance: number
+}
+
+interface TransactionItem {
+  id?: string
+  fromName?: string
+  toName?: string
+  amount: number
+  status: 'pending' | 'completed' | string
+}
+
 const Settlement = ({ roomId, onBack }) => {
   const { t } = useTranslation()
 
   const [loading, setLoading] = useState(true)
   const [settlements, setSettlements] = useState([])
-  const [balances, setBalances] = useState([])
-  const [transactions, setTransactions] = useState([])
+  const [balances, setBalances] = useState<BalanceItem[]>([])
+  const [transactions, setTransactions] = useState<TransactionItem[]>([])
   const [totalReceiptAmount, setTotalReceiptAmount] = useState(0)
   const [error, setError] = useState(null)
   const [recalculating, setRecalculating] = useState(false)
+
+  const toNumber = (value: unknown, fallback = 0): number => {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : fallback
+  }
 
   // Load settlement data
   useEffect(() => {
@@ -30,10 +50,31 @@ const Settlement = ({ roomId, onBack }) => {
       setError(null)
       
       const response = await roomAPI.getSettlements(roomId)
+
+      const normalizedBalances: BalanceItem[] = (response.balances || []).map((item) => {
+        const row = item as Record<string, unknown>
+        return {
+          id: typeof row.id === 'string' ? row.id : undefined,
+          name: typeof row.name === 'string' ? row.name : undefined,
+          participantName: typeof row.participantName === 'string' ? row.participantName : undefined,
+          balance: toNumber(row.balance)
+        }
+      })
+
+      const normalizedTransactions: TransactionItem[] = (response.transactions || []).map((item) => {
+        const row = item as Record<string, unknown>
+        return {
+          id: typeof row.id === 'string' ? row.id : undefined,
+          fromName: typeof row.fromName === 'string' ? row.fromName : undefined,
+          toName: typeof row.toName === 'string' ? row.toName : undefined,
+          amount: toNumber(row.amount),
+          status: typeof row.status === 'string' ? row.status : 'pending'
+        }
+      })
       
       setSettlements(response.settlements || [])
-      setBalances(response.balances || [])
-      setTransactions(response.transactions || [])
+      setBalances(normalizedBalances)
+      setTransactions(normalizedTransactions)
       setTotalReceiptAmount(response.totalReceiptAmount || 0)
     } catch (error) {
       console.error('Failed to load settlements:', error)
@@ -238,7 +279,7 @@ const Settlement = ({ roomId, onBack }) => {
                       balance.balance > 0 ? 'bg-secondary-500' : 
                       balance.balance < 0 ? 'bg-accent-500' : 'bg-neutral-400'
                     }`} />
-                    <span className="font-medium">{balance.participantName}</span>
+                    <span className="font-medium">{balance.participantName || balance.name || '-'}</span>
                   </div>
                   <div className="text-right">
                     <div className={`font-bold ${

@@ -62,7 +62,7 @@ const PrivacyPolicyPage = () => {
           <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
             <p className="text-primary-800 text-sm">
               <strong>최종 업데이트:</strong> 2024년 12월<br />
-              <strong>적용 범위:</strong> PaySplit 서비스 (paysplit.nphani.com)
+              <strong>적용 범위:</strong> PaySplit 서비스 (palnarium.com)
             </p>
           </div>
         </div>

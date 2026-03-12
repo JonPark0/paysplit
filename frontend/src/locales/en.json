@@ -121,7 +121,7 @@
       "copyMessage": "Copy Message",
       "qrCode": "QR Code",
       "downloadQr": "Download QR Code",
-      "shareMessage": "Join my PaySplit room!\n\nRoom URL: {{url}}\nEntry Code: {{code}}\n\nEasy bill splitting with PaySplit: https://paysplit.nphani.com"
+      "shareMessage": "Join my PaySplit room!\n\nRoom URL: {{url}}\nEntry Code: {{code}}\n\nEasy bill splitting with PaySplit: https://palnarium.com"
     },
     "status": {
       "active": "Active",

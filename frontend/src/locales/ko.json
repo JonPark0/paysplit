@@ -121,7 +121,7 @@
       "copyMessage": "메시지 복사",
       "qrCode": "QR 코드",
       "downloadQr": "QR 코드 다운로드",
-      "shareMessage": "PaySplit 방에 참여하세요!\n\n방 URL: {{url}}\n입장 코드: {{code}}\n\nPaySplit으로 쉽게 더치페이 계산하기: https://paysplit.nphani.com"
+      "shareMessage": "PaySplit 방에 참여하세요!\n\n방 URL: {{url}}\n입장 코드: {{code}}\n\nPaySplit으로 쉽게 더치페이 계산하기: https://palnarium.com"
     },
     "status": {
       "active": "활성",

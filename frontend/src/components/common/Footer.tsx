@@ -7,6 +7,7 @@ const Footer = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { language } = useSettingsStore()
+  const currentYear = new Date().getFullYear()
 
   return (
     <footer className="bg-white border-t border-neutral-200 safe-bottom">
@@ -50,13 +51,13 @@ const Footer = () => {
                 이용약관
               </button>
               <a
-                href="https://nphani.com"
+                href="https://palnarium.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
               >
                 <Globe className="w-4 h-4 mr-2" />
-                nphani.com
+                palnarium.com
               </a>
             </div>
           </div>
@@ -66,7 +67,7 @@ const Footer = () => {
         <div className="mt-8 pt-8 border-t border-neutral-200">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <p className="text-sm text-neutral-500">
-              © 2024 PaySplit. All rights reserved.
+              © {currentYear} Palnarium. All rights reserved.
             </p>
             <p className="text-sm text-neutral-500 mt-2 sm:mt-0">
               Version 1.0.0
