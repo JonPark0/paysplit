@@ -14,7 +14,7 @@ PaySplit은 영수증 기반 더치페이 계산을 위한 웹 애플리케이�
 - Backend: Node.js 24 + Express
 - Database: PostgreSQL 18
 - Infra: Docker + Docker Compose
-- OCR: Gemini API 또는 OLLAMA (Tesseract fallback)
+- OCR: Gemini API, OLLAMA, Mindlogic Gateway (Tesseract fallback)
 
 ## Quick Start
 
@@ -41,6 +41,9 @@ OCR까지 사용하려면 추가 설정:
 
 - Gemini 사용: `OCR_PROVIDER=gemini`, `GEMINI_API_KEY`
 - OLLAMA 사용: `OCR_PROVIDER=ollama`, `OLLAMA_URL`, `OLLAMA_MODEL`
+- Mindlogic Gateway 사용:
+  - OpenAI 호환: `OCR_PROVIDER=mindlogic`, `MINDLOGIC_API_FORMAT=openai`, `MINDLOGIC_API_KEY`, `MINDLOGIC_MODEL`
+  - Anthropic Messages: `OCR_PROVIDER=mindlogic`, `MINDLOGIC_API_FORMAT=anthropic`, `MINDLOGIC_API_KEY`, `MINDLOGIC_MODEL`
 
 ### 3) Run (Docker)
 

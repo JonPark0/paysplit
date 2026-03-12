@@ -28,6 +28,13 @@ const getOcrConfig = () => ({
   ollamaModel: process.env.OLLAMA_MODEL || 'gemma3:latest',
   geminiApiKey: process.env.GEMINI_API_KEY,
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+  mindlogicApiKey: process.env.MINDLOGIC_API_KEY,
+  mindlogicModel: process.env.MINDLOGIC_MODEL || 'claude-sonnet-4-6',
+  mindlogicApiFormat: process.env.MINDLOGIC_API_FORMAT || 'openai',
+  mindlogicGatewayBaseUrl: process.env.MINDLOGIC_BASE_URL || 'https://factchat-cloud.mindlogic.ai/v1/gateway',
+  mindlogicClaudeBaseUrl: process.env.MINDLOGIC_CLAUDE_BASE_URL || 'https://factchat-cloud.mindlogic.ai/v1/gateway/claude',
+  mindlogicAnthropicVersion: process.env.MINDLOGIC_ANTHROPIC_VERSION || '2023-06-01',
+  mindlogicAnthropicBeta: process.env.MINDLOGIC_ANTHROPIC_BETA,
   timeoutMs: Number(process.env.OCR_REQUEST_TIMEOUT_MS || 20000),
   maxImageBytes: Number(process.env.OCR_MAX_IMAGE_BYTES || 8 * 1024 * 1024)
 })
@@ -42,6 +49,42 @@ const DEFAULT_PROMPT = `영수증 이미지를 분석하여 다음 JSON 형식�
 }
 
 한국어 텍스트를 정확히 인식하고, 상품명과 가격을 추출해주세요. 가격은 숫자만 반환하세요. JSON 형식으로만 응답해주세요.`
+
+const parseStructuredOcrText = (rawText) => {
+  if (!rawText || typeof rawText !== 'string') {
+    return {
+      parsedResult: {
+        text: '',
+        items: [],
+        total: 0,
+        store: ''
+      },
+      rawText: ''
+    }
+  }
+
+  try {
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      throw new Error('No JSON payload found')
+    }
+
+    const parsedResult = JSON.parse(jsonMatch[0])
+    return { parsedResult, rawText }
+  } catch (error) {
+    console.error('Failed to parse OCR structured response:', error)
+    return {
+      parsedResult: {
+        text: rawText,
+        items: [],
+        total: 0,
+        store: '',
+        error: 'Failed to parse structured response'
+      },
+      rawText
+    }
+  }
+}
 
 export default function ollamaRoutes(db) {
   const router = express.Router()
@@ -78,6 +121,10 @@ export default function ollamaRoutes(db) {
 
         if (config.provider === 'ollama') {
           return await processWithOllama(res, image, prompt, config, startedAt)
+        }
+
+        if (config.provider === 'mindlogic') {
+          return await processWithMindlogic(res, image, prompt, config, startedAt)
         }
 
         return res.status(400).json({
@@ -145,6 +192,34 @@ export default function ollamaRoutes(db) {
         healthStatus.model = config.ollamaModel
         healthStatus.modelAvailable = availableModels.some((name) => name.includes(config.ollamaModel))
         healthStatus.availableModels = availableModels
+      } else if (config.provider === 'mindlogic') {
+        if (!config.mindlogicApiKey) {
+          throw new Error('Mindlogic API key not configured')
+        }
+
+        const response = await fetchWithTimeout(
+          `${config.mindlogicGatewayBaseUrl}/models/`,
+          {
+            headers: {
+              Authorization: `Bearer ${config.mindlogicApiKey}`
+            }
+          },
+          config.timeoutMs
+        )
+
+        if (!response.ok) {
+          throw new Error(`Mindlogic API health check failed: ${response.status}`)
+        }
+
+        const models = await response.json()
+        const modelIds = models.data?.map((model) => model.id) || []
+
+        healthStatus.endpoint = config.mindlogicApiFormat === 'anthropic'
+          ? config.mindlogicClaudeBaseUrl
+          : config.mindlogicGatewayBaseUrl
+        healthStatus.model = config.mindlogicModel
+        healthStatus.apiFormat = config.mindlogicApiFormat
+        healthStatus.modelAvailable = modelIds.includes(config.mindlogicModel)
       }
 
       return res.json(healthStatus)
@@ -208,31 +283,8 @@ async function processWithGemini(res, image, prompt, config, startedAt) {
 
     const result = await response.json()
 
-    let parsedResult = {}
-    let rawText = ''
-
-    try {
-      if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-        rawText = result.candidates[0].content.parts[0].text
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/)
-
-        if (jsonMatch) {
-          parsedResult = JSON.parse(jsonMatch[0])
-        } else {
-          throw new Error('No JSON found in response')
-        }
-      } else {
-        throw new Error('Invalid response structure from Gemini')
-      }
-    } catch (parseError) {
-      console.error('Failed to parse Gemini response:', parseError)
-      parsedResult = {
-        text: rawText,
-        items: [],
-        total: 0,
-        error: 'Failed to parse structured response'
-      }
-    }
+    const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const { parsedResult } = parseStructuredOcrText(rawText)
 
     return res.json({
       success: true,
@@ -282,22 +334,8 @@ async function processWithOllama(res, image, prompt, config, startedAt) {
 
     const result = await response.json()
 
-    let parsedResult = {}
-    try {
-      if (result.response) {
-        parsedResult = JSON.parse(result.response)
-      } else {
-        throw new Error('No response from OLLAMA')
-      }
-    } catch (parseError) {
-      console.error('Failed to parse OLLAMA response:', parseError)
-      parsedResult = {
-        text: result.response || '',
-        items: [],
-        total: 0,
-        error: 'Failed to parse structured response'
-      }
-    }
+    const rawText = result.response || ''
+    const { parsedResult } = parseStructuredOcrText(rawText)
 
     return res.json({
       success: true,
@@ -314,5 +352,160 @@ async function processWithOllama(res, image, prompt, config, startedAt) {
   } catch (error) {
     console.error('OLLAMA processing error:', error)
     return res.status(502).json({ error: 'Failed to process receipt with OLLAMA' })
+  }
+}
+
+async function processWithMindlogic(res, image, prompt, config, startedAt) {
+  if (!config.mindlogicApiKey) {
+    return res.status(500).json({ error: 'Mindlogic API key not configured' })
+  }
+
+  if (config.mindlogicApiFormat === 'anthropic') {
+    return processWithMindlogicAnthropic(res, image, prompt, config, startedAt)
+  }
+
+  return processWithMindlogicOpenAI(res, image, prompt, config, startedAt)
+}
+
+async function processWithMindlogicOpenAI(res, image, prompt, config, startedAt) {
+  try {
+    const ocrPrompt = process.env.MINDLOGIC_OCR_PROMPT || prompt || DEFAULT_PROMPT
+
+    const requestBody = {
+      model: config.mindlogicModel,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: ocrPrompt },
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:image/jpeg;base64,${image}`
+            }
+          }
+        ]
+      }],
+      temperature: 0.1,
+      response_format: {
+        type: 'json_object'
+      }
+    }
+
+    const response = await fetchWithTimeout(
+      `${config.mindlogicGatewayBaseUrl}/chat/completions/`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.mindlogicApiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      },
+      config.timeoutMs
+    )
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      console.error(`Mindlogic(OpenAI) API error: ${response.status} ${errorBody}`)
+      return res.status(502).json({ error: 'Mindlogic OCR request failed' })
+    }
+
+    const result = await response.json()
+    const rawText = result.choices?.[0]?.message?.content || ''
+    const { parsedResult } = parseStructuredOcrText(rawText)
+
+    return res.json({
+      success: true,
+      text: parsedResult.text || rawText,
+      items: parsedResult.items || [],
+      total: parsedResult.total || 0,
+      store: parsedResult.store || '',
+      metadata: {
+        provider: 'mindlogic',
+        apiFormat: 'openai',
+        model: config.mindlogicModel,
+        processingTimeMs: Date.now() - startedAt
+      }
+    })
+  } catch (error) {
+    console.error('Mindlogic(OpenAI) processing error:', error)
+    return res.status(502).json({ error: 'Failed to process receipt with Mindlogic' })
+  }
+}
+
+async function processWithMindlogicAnthropic(res, image, prompt, config, startedAt) {
+  try {
+    const ocrPrompt = process.env.MINDLOGIC_OCR_PROMPT || prompt || DEFAULT_PROMPT
+
+    const requestBody = {
+      model: config.mindlogicModel,
+      max_tokens: 1500,
+      temperature: 0.1,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: ocrPrompt },
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: 'image/jpeg',
+              data: image
+            }
+          }
+        ]
+      }]
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-api-key': config.mindlogicApiKey,
+      'anthropic-version': config.mindlogicAnthropicVersion
+    }
+
+    if (config.mindlogicAnthropicBeta) {
+      headers['anthropic-beta'] = config.mindlogicAnthropicBeta
+    }
+
+    const response = await fetchWithTimeout(
+      `${config.mindlogicClaudeBaseUrl}/v1/messages/`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody)
+      },
+      config.timeoutMs
+    )
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      console.error(`Mindlogic(Anthropic) API error: ${response.status} ${errorBody}`)
+      return res.status(502).json({ error: 'Mindlogic OCR request failed' })
+    }
+
+    const result = await response.json()
+    const rawText = (result.content || [])
+      .filter((block) => block.type === 'text')
+      .map((block) => block.text)
+      .join('\n')
+
+    const { parsedResult } = parseStructuredOcrText(rawText)
+
+    return res.json({
+      success: true,
+      text: parsedResult.text || rawText,
+      items: parsedResult.items || [],
+      total: parsedResult.total || 0,
+      store: parsedResult.store || '',
+      metadata: {
+        provider: 'mindlogic',
+        apiFormat: 'anthropic',
+        model: config.mindlogicModel,
+        processingTimeMs: Date.now() - startedAt
+      }
+    })
+  } catch (error) {
+    console.error('Mindlogic(Anthropic) processing error:', error)
+    return res.status(502).json({ error: 'Failed to process receipt with Mindlogic' })
   }
 }

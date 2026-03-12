@@ -32,6 +32,27 @@ OCR 사용 시:
 
 - `OCR_PROVIDER=gemini` + `GEMINI_API_KEY`
 - 또는 `OCR_PROVIDER=ollama` + `OLLAMA_URL`
+- 또는 `OCR_PROVIDER=mindlogic` + `MINDLOGIC_API_KEY`
+
+Mindlogic Gateway 사용 시:
+
+- OpenAI 호환 모드
+  - `MINDLOGIC_API_FORMAT=openai`
+  - `MINDLOGIC_BASE_URL=https://factchat-cloud.mindlogic.ai/v1/gateway`
+  - 호출 엔드포인트: `/chat/completions/`
+  - 인증: `Authorization: Bearer <API_KEY>`
+- Anthropic Messages 모드
+  - `MINDLOGIC_API_FORMAT=anthropic`
+  - `MINDLOGIC_CLAUDE_BASE_URL=https://factchat-cloud.mindlogic.ai/v1/gateway/claude`
+  - 호출 엔드포인트: `/v1/messages/`
+  - 인증: `x-api-key`, `anthropic-version`
+  - 선택: `MINDLOGIC_ANTHROPIC_BETA` (prompt caching 등)
+
+관련 문서:
+
+- 개요: https://docs.mindlogic.ai/docs/inu/gateway/getting-started/overview#gateway-api
+- OpenAI SDK 연동: https://docs.mindlogic.ai/docs/inu/gateway/integrations/openai-sdk#python
+- Anthropic Messages API: https://docs.mindlogic.ai/docs/inu/gateway/api-reference/messages-api#anthropic-messages-api
 
 ## 3. Build and Start
 
