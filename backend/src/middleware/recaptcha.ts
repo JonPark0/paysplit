@@ -1,51 +1,61 @@
+import type { NextFunction, Request, Response } from 'express'
 import fetch from 'node-fetch'
 import { AppError } from './errorHandler.js'
 
-/**
- * reCAPTCHA V3 verification middleware
- * Verifies reCAPTCHA token from client and checks score against threshold
- */
+interface RecaptchaVerificationResponse {
+  success: boolean
+  score?: number
+  action?: string
+  ['error-codes']?: string[]
+}
+
 export const verifyRecaptcha = (action = 'submit') => {
-  return async (req, res, next) => {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { recaptchaToken } = req.body
+      const requestBody = (req.body ?? {}) as { recaptchaToken?: string }
+      const { recaptchaToken } = requestBody
+
       const isProduction = process.env.NODE_ENV === 'production'
       const isRecaptchaRequired = process.env.RECAPTCHA_REQUIRED !== 'false'
-      
-      // Skip verification in test environment
+
       if (process.env.NODE_ENV === 'test') {
-        return next()
+        next()
+        return
       }
-      
-      // Check if reCAPTCHA is enabled
+
       if (!process.env.RECAPTCHA_SECRET_KEY) {
         if (isProduction && isRecaptchaRequired) {
-          return next(new AppError('reCAPTCHA is not configured on server', 503))
+          next(new AppError('reCAPTCHA is not configured on server', 503))
+          return
         }
+
         console.warn('reCAPTCHA not configured, skipping verification')
-        return next()
+        next()
+        return
       }
-      
-      // Validate token presence
+
       if (!recaptchaToken) {
         if (isProduction && isRecaptchaRequired) {
-          return next(new AppError('reCAPTCHA token is required', 400))
+          next(new AppError('reCAPTCHA token is required', 400))
+          return
         }
+
         console.warn('reCAPTCHA token not provided, allowing request to proceed in non-production mode')
-        return next()
+        next()
+        return
       }
-      
-      // Verify token with Google reCAPTCHA API
+
       const verificationURL = 'https://www.google.com/recaptcha/api/siteverify'
       const verificationData = new URLSearchParams({
         secret: process.env.RECAPTCHA_SECRET_KEY,
         response: recaptchaToken,
         remoteip: req.ip
       })
-      
+
       const controller = new AbortController()
       const timeoutMs = Number(process.env.RECAPTCHA_TIMEOUT_MS || 5000)
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
       const response = await fetch(verificationURL, {
         method: 'POST',
         headers: {
@@ -57,57 +67,48 @@ export const verifyRecaptcha = (action = 'submit') => {
 
       if (!response.ok) {
         console.error('reCAPTCHA verification endpoint error:', response.status)
-        return next(new AppError('reCAPTCHA verification service unavailable', 503))
+        next(new AppError('reCAPTCHA verification service unavailable', 503))
+        return
       }
-      
-      const verificationResult = await response.json()
-      
-      // Check if verification was successful
+
+      const verificationResult = await response.json() as RecaptchaVerificationResponse
+
       if (!verificationResult.success) {
         console.error('reCAPTCHA verification failed:', verificationResult['error-codes'])
-        return next(new AppError('reCAPTCHA verification failed', 400))
+        next(new AppError('reCAPTCHA verification failed', 400))
+        return
       }
-      
-      // Check action match (optional but recommended for V3)
+
       if (verificationResult.action && verificationResult.action !== action) {
         console.error(`reCAPTCHA action mismatch: expected ${action}, got ${verificationResult.action}`)
-        return next(new AppError('reCAPTCHA action mismatch', 400))
+        next(new AppError('reCAPTCHA action mismatch', 400))
+        return
       }
-      
-      // Check score against threshold
-      const threshold = parseFloat(process.env.RECAPTCHA_THRESHOLD) || 0.5
-      if (verificationResult.score < threshold) {
-        console.warn(`reCAPTCHA score too low: ${verificationResult.score} < ${threshold}`)
-        return next(new AppError('reCAPTCHA verification failed: suspicious activity detected', 400))
+
+      const threshold = Number.parseFloat(process.env.RECAPTCHA_THRESHOLD || '0.5')
+      const score = verificationResult.score ?? 0
+      if (score < threshold) {
+        console.warn(`reCAPTCHA score too low: ${score} < ${threshold}`)
+        next(new AppError('reCAPTCHA verification failed: suspicious activity detected', 400))
+        return
       }
-      
-      // Log successful verification (for monitoring)
-      console.log(`reCAPTCHA verification successful: score=${verificationResult.score}, action=${verificationResult.action}`)
-      
-      // Remove token from request body to prevent it from being processed further
-      delete req.body.recaptchaToken
-      
+
+      console.log(`reCAPTCHA verification successful: score=${score}, action=${verificationResult.action}`)
+
+      if (req.body && typeof req.body === 'object') {
+        delete (req.body as { recaptchaToken?: string }).recaptchaToken
+      }
+
       next()
     } catch (error) {
       console.error('reCAPTCHA verification error:', error)
-      return next(new AppError('reCAPTCHA verification failed', 500))
+      next(new AppError('reCAPTCHA verification failed', 500))
     }
   }
 }
 
-/**
- * Specific middleware for room creation with 'room_create' action
- */
 export const verifyRecaptchaRoomCreate = verifyRecaptcha('room_create')
-
-/**
- * Specific middleware for room join with 'room_join' action
- */
 export const verifyRecaptchaRoomJoin = verifyRecaptcha('room_join')
-
-/**
- * Specific middleware for receipt upload with 'receipt_upload' action
- */
 export const verifyRecaptchaReceiptUpload = verifyRecaptcha('receipt_upload')
 
 export default verifyRecaptcha

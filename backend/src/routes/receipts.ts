@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { type Request } from 'express'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { validate, receiptSchemas, sanitizeBody } from '../middleware/validation.js'
 import { checkRoomAccess } from '../middleware/auth.js'
@@ -8,8 +8,33 @@ import { verifyRecaptchaReceiptUpload } from '../middleware/recaptcha.js'
 import ImageProcessor from '../services/imageProcessor.js'
 import Receipt from '../models/Receipt.js'
 import Room from '../models/Room.js'
+import type Database from '../utils/database.js'
 
 const router = express.Router()
+
+interface CountRow {
+  count: number
+}
+
+const toParam = (value: string | string[] | undefined): string => {
+  if (Array.isArray(value)) {
+    return value[0] || ''
+  }
+  return value || ''
+}
+
+const toIntegerQuery = (value: unknown, fallback: number): number => {
+  const normalized = Array.isArray(value) ? value[0] : value
+  const parsed = Number.parseInt(String(normalized ?? fallback), 10)
+  return Number.isNaN(parsed) ? fallback : parsed
+}
+
+const getParticipant = (req: Request) => {
+  if (!req.participant) {
+    throw new Error('Participant context is missing')
+  }
+  return req.participant
+}
 
 // Fix filename encoding issues (commonly caused by EUC_KR encoded filenames)
 function fixFilenameEncoding(filename) {
@@ -46,14 +71,14 @@ function fixFilenameEncoding(filename) {
   }
 }
 
-export default function(db) {
+export default function receiptRoutes(db: Database) {
   const receiptModel = new Receipt(db)
   const roomModel = new Room(db)
   const activityLogger = new ActivityLogger(db)
 
   // Check if room has active settlements
-  const checkActiveSettlements = async (roomId) => {
-    const activeSettlements = await db.all(`
+  const checkActiveSettlements = async (roomId: string): Promise<boolean> => {
+    const activeSettlements = await db.all<CountRow>(`
       SELECT COUNT(*) as count FROM settlements 
       WHERE room_id = ? AND status = 'pending'
     `, [roomId])
@@ -67,8 +92,8 @@ export default function(db) {
     handleMulterError,
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const participant = getParticipant(req)
 
       // Check if settlements are in progress
       const hasActiveSettlements = await checkActiveSettlements(roomId)
@@ -134,8 +159,8 @@ export default function(db) {
     validate(receiptSchemas.create),
     verifyRecaptchaReceiptUpload,
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const participant = getParticipant(req)
       const { totalAmount, currency, payerId, items, encryptedFilename, originalFilename } = req.body
 
       // Check if settlements are in progress
@@ -194,7 +219,7 @@ export default function(db) {
   router.get('/:roomId',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
       const receipts = await receiptModel.findByRoomId(roomId)
 
       res.json({ receipts })
@@ -205,7 +230,7 @@ export default function(db) {
   router.get('/:roomId/:receiptId',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { receiptId } = req.params
+      const receiptId = toParam(req.params.receiptId)
       const receipt = await receiptModel.findById(receiptId)
 
       if (!receipt) {
@@ -213,7 +238,7 @@ export default function(db) {
       }
 
       // Check if receipt belongs to the room
-      if (receipt.roomId !== req.params.roomId) {
+      if (receipt.roomId !== toParam(req.params.roomId)) {
         return res.status(403).json({ error: 'Access denied' })
       }
 
@@ -227,8 +252,9 @@ export default function(db) {
     sanitizeBody,
     validate(receiptSchemas.update),
     asyncHandler(async (req, res) => {
-      const { roomId, receiptId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const receiptId = toParam(req.params.receiptId)
+      const participant = getParticipant(req)
       const { items, totalAmount } = req.body
 
       // Check if settlements are in progress
@@ -299,8 +325,9 @@ export default function(db) {
   router.delete('/:roomId/:receiptId',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId, receiptId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const receiptId = toParam(req.params.receiptId)
+      const participant = getParticipant(req)
 
       // Get existing receipt
       const receipt = await receiptModel.findById(receiptId)
@@ -362,7 +389,7 @@ export default function(db) {
   router.get('/:roomId/:receiptId/image',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { receiptId } = req.params
+      const receiptId = toParam(req.params.receiptId)
 
       // Get receipt
       const receipt = await receiptModel.findById(receiptId)
@@ -393,8 +420,9 @@ export default function(db) {
   router.get('/:roomId/:receiptId/thumbnail',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { receiptId } = req.params
-      const { width = 300, height = 300 } = req.query
+      const receiptId = toParam(req.params.receiptId)
+      const width = toIntegerQuery(req.query.width, 300)
+      const height = toIntegerQuery(req.query.height, 300)
 
       // Get receipt
       const receipt = await receiptModel.findById(receiptId)
@@ -409,8 +437,8 @@ export default function(db) {
         // Generate thumbnail
         const thumbnail = await ImageProcessor.generateThumbnail(
           imageBuffer,
-          parseInt(width),
-          parseInt(height)
+          width,
+          height
         )
         
         // Set appropriate headers
@@ -432,7 +460,7 @@ export default function(db) {
   router.get('/:roomId/:receiptId/splits',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { receiptId } = req.params
+      const receiptId = toParam(req.params.receiptId)
       const splits = await receiptModel.getReceiptSplits(receiptId)
 
       res.json({ splits })

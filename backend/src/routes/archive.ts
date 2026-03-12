@@ -1,4 +1,5 @@
-import express from 'express'
+import express, { type Request } from 'express'
+import type Database from '../utils/database.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { checkRoomAccess } from '../middleware/auth.js'
 import { ActivityLogger } from '../middleware/logger.js'
@@ -7,62 +8,63 @@ import Receipt from '../models/Receipt.js'
 import Settlement from '../models/Settlement.js'
 import Participant from '../models/Participant.js'
 
+type ArchiveRequest = Request & {
+  participant?: {
+    id: string
+    name: string
+    isAdmin?: boolean
+  }
+}
+
+const toParam = (value: string | string[] | undefined): string => {
+  if (Array.isArray(value)) {
+    return value[0] || ''
+  }
+  return value || ''
+}
+
+const getParticipant = (req: ArchiveRequest): { id: string; name: string; isAdmin?: boolean } => {
+  if (!req.participant) {
+    throw new Error('Participant context is missing')
+  }
+  return req.participant
+}
+
 const router = express.Router()
 
-export default function(db) {
+export default function archiveRoutes(db: Database) {
   const roomModel = new Room(db)
   const receiptModel = new Receipt(db)
   const settlementModel = new Settlement(db)
   const participantModel = new Participant(db)
   const activityLogger = new ActivityLogger(db)
 
-  // Get complete room data for archiving
   router.get('/:roomId/complete',
     checkRoomAccess(db),
-    asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { participant } = req
+    asyncHandler(async (req: ArchiveRequest, res) => {
+      const roomId = toParam(req.params.roomId)
+      const participant = getParticipant(req)
 
-      // Get room details
-      const room = await roomModel.findById(roomId)
+      const room = await roomModel.findById(roomId) as any
       if (!room) {
-        return res.status(404).json({ error: 'Room not found' })
+        res.status(404).json({ error: 'Room not found' })
+        return
       }
 
-      // Get participants
-      const participants = await participantModel.findByRoomId(roomId)
-
-      // Get receipts with items
-      const receipts = await receiptModel.findByRoomId(roomId)
-
-      // Get settlements
-      const settlements = await settlementModel.getSettlementsByRoom(roomId)
-
-      // Get activity logs
+      const participants = await participantModel.findByRoomId(roomId) as any[]
+      const receipts = await receiptModel.findByRoomId(roomId) as any[]
+      const settlements = await settlementModel.getSettlementsByRoom(roomId) as any[]
       const activities = await activityLogger.getRoomActivities(roomId, 100)
+      const finalSettlement = await settlementModel.calculateOptimalSettlement(roomId) as any
 
-      // Calculate final settlement
-      const finalSettlement = await settlementModel.calculateOptimalSettlement(roomId)
-
-      // Get participant balances
-      const participantBalances = []
+      const participantBalances: Array<{ participant: any; balance: any }> = []
       for (const p of participants) {
         const balance = await participantModel.getParticipantBalance(p.id)
-        participantBalances.push({
-          participant: p,
-          balance
-        })
+        participantBalances.push({ participant: p, balance })
       }
 
-      // Update room activity
       await roomModel.updateLastActivity(roomId)
-
-      // Log activity
-      await activityLogger.logActivity(
-        roomId,
-        participant.id,
-        'archive_accessed'
-      )
+      await activityLogger.logActivity(roomId, participant.id, 'archive_accessed')
 
       const archiveData = {
         room: {
@@ -90,7 +92,7 @@ export default function(db) {
           receiptCount: receipts.length,
           totalAmount: receipts.reduce((sum, r) => sum + r.totalAmount, 0),
           settlementCount: settlements.length,
-          completedSettlements: settlements.filter(s => s.status === 'completed').length
+          completedSettlements: settlements.filter((s) => s.status === 'completed').length
         },
         exportedAt: new Date().toISOString(),
         exportedBy: participant.name
@@ -100,12 +102,11 @@ export default function(db) {
     })
   )
 
-  // Get specific data types for selective export
   router.get('/:roomId/receipts',
     checkRoomAccess(db),
-    asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const receipts = await receiptModel.findByRoomId(roomId)
+    asyncHandler(async (req: ArchiveRequest, res) => {
+      const roomId = toParam(req.params.roomId)
+      const receipts = await receiptModel.findByRoomId(roomId) as any[]
 
       res.json({
         receipts,
@@ -119,16 +120,16 @@ export default function(db) {
 
   router.get('/:roomId/settlements',
     checkRoomAccess(db),
-    asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const settlements = await settlementModel.getSettlementsByRoom(roomId)
+    asyncHandler(async (req: ArchiveRequest, res) => {
+      const roomId = toParam(req.params.roomId)
+      const settlements = await settlementModel.getSettlementsByRoom(roomId) as any[]
 
       res.json({
         settlements,
         summary: {
           count: settlements.length,
           totalAmount: settlements.reduce((sum, s) => sum + s.amount, 0),
-          completedCount: settlements.filter(s => s.status === 'completed').length
+          completedCount: settlements.filter((s) => s.status === 'completed').length
         }
       })
     })
@@ -136,25 +137,21 @@ export default function(db) {
 
   router.get('/:roomId/participants',
     checkRoomAccess(db),
-    asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const participants = await participantModel.findByRoomId(roomId)
+    asyncHandler(async (req: ArchiveRequest, res) => {
+      const roomId = toParam(req.params.roomId)
+      const participants = await participantModel.findByRoomId(roomId) as any[]
 
-      // Get balances for each participant
-      const participantBalances = []
+      const participantBalances: Array<{ participant: any; balance: any }> = []
       for (const p of participants) {
         const balance = await participantModel.getParticipantBalance(p.id)
-        participantBalances.push({
-          participant: p,
-          balance
-        })
+        participantBalances.push({ participant: p, balance })
       }
 
       res.json({
         participants: participantBalances,
         summary: {
           count: participants.length,
-          adminCount: participants.filter(p => p.isAdmin).length
+          adminCount: participants.filter((p) => p.isAdmin).length
         }
       })
     })
@@ -162,11 +159,12 @@ export default function(db) {
 
   router.get('/:roomId/activities',
     checkRoomAccess(db),
-    asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { limit = 100 } = req.query
+    asyncHandler(async (req: ArchiveRequest, res) => {
+      const roomId = toParam(req.params.roomId)
+      const limitValue = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit
+      const limit = Number.parseInt(String(limitValue || '100'), 10)
 
-      const activities = await activityLogger.getRoomActivities(roomId, parseInt(limit))
+      const activities = await activityLogger.getRoomActivities(roomId, Number.isNaN(limit) ? 100 : limit)
 
       res.json({
         activities,
@@ -177,33 +175,24 @@ export default function(db) {
     })
   )
 
-  // Get room statistics
   router.get('/:roomId/stats',
     checkRoomAccess(db),
-    asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+    asyncHandler(async (req: ArchiveRequest, res) => {
+      const roomId = toParam(req.params.roomId)
 
-      // Get basic room stats
       const roomStats = await roomModel.getRoomStats(roomId)
-
-      // Get receipt stats
       const receiptStats = await receiptModel.getRoomReceiptStats(roomId)
+      const settlement = await settlementModel.calculateOptimalSettlement(roomId) as any
+      const participants = await participantModel.findByRoomId(roomId) as any[]
 
-      // Get settlement calculation
-      const settlement = await settlementModel.calculateOptimalSettlement(roomId)
-
-      // Get participant count
-      const participants = await participantModel.findByRoomId(roomId)
-
-      // Calculate split coverage (percentage of items that have been split)
-      const totalItems = await db.get(`
+      const totalItems = await db.get<{ count: number }>(`
         SELECT COUNT(*) as count
         FROM receipt_items ri
         JOIN receipts r ON ri.receipt_id = r.id
         WHERE r.room_id = ?
       `, [roomId])
 
-      const splitItems = await db.get(`
+      const splitItems = await db.get<{ count: number }>(`
         SELECT COUNT(DISTINCT item_id) as count
         FROM splits s
         JOIN receipt_items ri ON s.item_id = ri.id
@@ -211,25 +200,26 @@ export default function(db) {
         WHERE r.room_id = ?
       `, [roomId])
 
-      const splitCoverage = totalItems.count > 0 ? 
-        (splitItems.count / totalItems.count) * 100 : 0
+      const totalItemCount = totalItems?.count || 0
+      const splitItemCount = splitItems?.count || 0
+      const splitCoverage = totalItemCount > 0 ? (splitItemCount / totalItemCount) * 100 : 0
 
       const stats = {
         room: roomStats,
         receipts: receiptStats,
         participants: {
           total: participants.length,
-          admins: participants.filter(p => p.isAdmin).length
+          admins: participants.filter((p) => p.isAdmin).length
         },
         settlement: {
           totalTransactions: settlement.settlements.length,
           totalAmount: settlement.totalAmount,
-          balancedParticipants: settlement.balances.filter(b => Math.abs(b.balance) < 0.01).length
+          balancedParticipants: settlement.balances.filter((b: any) => Math.abs(b.balance) < 0.01).length
         },
         progress: {
           splitCoverage: Math.round(splitCoverage * 100) / 100,
-          itemsTotal: totalItems.count,
-          itemsSplit: splitItems.count
+          itemsTotal: totalItemCount,
+          itemsSplit: splitItemCount
         }
       }
 
@@ -237,22 +227,22 @@ export default function(db) {
     })
   )
 
-  // Export data in different formats
   router.get('/:roomId/export/:format',
     checkRoomAccess(db),
-    asyncHandler(async (req, res) => {
-      const { roomId, format } = req.params
-      const { participant } = req
+    asyncHandler(async (req: ArchiveRequest, res) => {
+      const roomId = toParam(req.params.roomId)
+      const format = toParam(req.params.format)
+      const participant = getParticipant(req)
 
       if (!['json', 'csv'].includes(format)) {
-        return res.status(400).json({ error: 'Unsupported format. Use json or csv' })
+        res.status(400).json({ error: 'Unsupported format. Use json or csv' })
+        return
       }
 
-      // Get complete room data
       const room = await roomModel.findById(roomId)
       const participants = await participantModel.findByRoomId(roomId)
       const receipts = await receiptModel.findByRoomId(roomId)
-      const settlements = await settlementModel.getSettlementsByRoom(roomId)
+      const settlements = await settlementModel.getSettlementsByRoom(roomId) as any[]
       const finalSettlement = await settlementModel.calculateOptimalSettlement(roomId)
 
       if (format === 'json') {
@@ -269,11 +259,8 @@ export default function(db) {
         res.setHeader('Content-Type', 'application/json')
         res.setHeader('Content-Disposition', `attachment; filename="paysplit_${roomId}_${Date.now()}.json"`)
         res.json(exportData)
-
-      } else if (format === 'csv') {
-        // Generate CSV format for settlements
+      } else {
         let csv = 'From,To,Amount,Status,Created,Completed\n'
-        
         for (const settlement of settlements) {
           csv += `"${settlement.from_participant_name}","${settlement.to_participant_name}",${settlement.amount},"${settlement.status}","${settlement.created_at}","${settlement.completed_at || ''}"\n`
         }
@@ -283,13 +270,7 @@ export default function(db) {
         res.send(csv)
       }
 
-      // Log activity
-      await activityLogger.logActivity(
-        roomId,
-        participant.id,
-        'data_exported',
-        { format }
-      )
+      await activityLogger.logActivity(roomId, participant.id, 'data_exported', { format })
     })
   )
 

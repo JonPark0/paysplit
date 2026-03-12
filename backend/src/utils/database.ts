@@ -1,9 +1,11 @@
 import { Pool, types } from 'pg'
 
-types.setTypeParser(20, (value) => Number.parseInt(value, 10))
-types.setTypeParser(1700, (value) => Number.parseFloat(value))
+types.setTypeParser(20, (value: string) => Number.parseInt(value, 10))
+types.setTypeParser(1700, (value: string) => Number.parseFloat(value))
 
-const toPgPlaceholders = (sql, params) => {
+type SqlParams = Array<string | number | boolean | null>
+
+const toPgPlaceholders = (sql: string, params: SqlParams): string => {
   if (!params || params.length === 0) {
     return sql
   }
@@ -15,13 +17,22 @@ const toPgPlaceholders = (sql, params) => {
   })
 }
 
+interface MigrationDefinition {
+  name: string
+  statements: string[]
+}
+
 class Database {
-  constructor(connectionString) {
+  private connectionString?: string
+
+  private pool: Pool | null
+
+  constructor(connectionString?: string) {
     this.connectionString = connectionString
     this.pool = null
   }
 
-  async init() {
+  async init(): Promise<Pool> {
     if (!this.connectionString) {
       throw new Error('DATABASE_URL is required')
     }
@@ -42,7 +53,15 @@ class Database {
     return this.pool
   }
 
-  async runMigrations() {
+  private getPool(): Pool {
+    if (!this.pool) {
+      throw new Error('Database pool is not initialized')
+    }
+
+    return this.pool
+  }
+
+  async runMigrations(): Promise<void> {
     console.log('Running database migrations...')
 
     await this.run(`
@@ -53,7 +72,7 @@ class Database {
       )
     `)
 
-    const migrations = [
+    const migrations: MigrationDefinition[] = [
       {
         name: '001_create_tables',
         statements: [
@@ -191,13 +210,13 @@ class Database {
     ]
 
     for (const migration of migrations) {
-      const existing = await this.get('SELECT name FROM migrations WHERE name = ?', [migration.name])
+      const existing = await this.get<{ name: string }>('SELECT name FROM migrations WHERE name = ?', [migration.name])
 
       if (existing) {
         continue
       }
 
-      const client = await this.pool.connect()
+      const client = await this.getPool().connect()
 
       try {
         console.log(`Running migration: ${migration.name}`)
@@ -222,31 +241,32 @@ class Database {
     console.log('Database migrations completed')
   }
 
-  async run(sql, params = []) {
+  async run(sql: string, params: SqlParams = []): Promise<{ id: string | number | null; changes: number }> {
     const query = toPgPlaceholders(sql, params)
-    const result = await this.pool.query(query, params)
+    const result = await this.getPool().query(query, params)
 
     return {
-      id: result.rows?.[0]?.id ?? null,
+      id: (result.rows?.[0] as { id?: string | number } | undefined)?.id ?? null,
       changes: result.rowCount ?? 0
     }
   }
 
-  async get(sql, params = []) {
+  async get<T = Record<string, unknown>>(sql: string, params: SqlParams = []): Promise<T | null> {
     const query = toPgPlaceholders(sql, params)
-    const result = await this.pool.query(query, params)
-    return result.rows[0] || null
+    const result = await this.getPool().query(query, params)
+    return (result.rows[0] as T) || null
   }
 
-  async all(sql, params = []) {
+  async all<T = Record<string, unknown>>(sql: string, params: SqlParams = []): Promise<T[]> {
     const query = toPgPlaceholders(sql, params)
-    const result = await this.pool.query(query, params)
-    return result.rows
+    const result = await this.getPool().query(query, params)
+    return result.rows as T[]
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (this.pool) {
       await this.pool.end()
+      this.pool = null
       console.log('Database connection closed')
     }
   }

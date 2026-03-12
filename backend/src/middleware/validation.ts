@@ -1,21 +1,23 @@
-import Joi from 'joi'
+import type { NextFunction, Request, Response } from 'express'
+import Joi, { type ObjectSchema } from 'joi'
 import { AppError } from './errorHandler.js'
 
-// Validation middleware factory
-export const validate = (schema, property = 'body') => {
-  return (req, res, next) => {
+type RequestProperty = 'body' | 'query' | 'params'
+
+export const validate = (schema: ObjectSchema, property: RequestProperty = 'body') => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     const { error } = schema.validate(req[property])
-    
+
     if (error) {
-      const message = error.details.map(detail => detail.message).join(', ')
-      return next(new AppError(message, 400))
+      const message = error.details.map((detail) => detail.message).join(', ')
+      next(new AppError(message, 400))
+      return
     }
-    
+
     next()
   }
 }
 
-// Room validation schemas
 export const roomSchemas = {
   create: Joi.object({
     name: Joi.string().max(100).optional().allow(''),
@@ -37,7 +39,6 @@ export const roomSchemas = {
   })
 }
 
-// Receipt validation schemas
 export const receiptSchemas = {
   create: Joi.object({
     totalAmount: Joi.number().positive().required(),
@@ -69,7 +70,6 @@ export const receiptSchemas = {
   })
 }
 
-// Split validation schemas
 export const splitSchemas = {
   create: Joi.object({
     itemId: Joi.string().uuid().required(),
@@ -92,7 +92,6 @@ export const splitSchemas = {
   })
 }
 
-// Settlement validation schemas
 export const settlementSchemas = {
   create: Joi.object({
     fromParticipantId: Joi.string().uuid().required(),
@@ -105,48 +104,49 @@ export const settlementSchemas = {
   })
 }
 
-// File upload validation
-export const validateFile = (req, res, next) => {
-  if (!req.file) {
-    return next(new AppError('File is required', 400))
+export const validateFile = (req: Request, _res: Response, next: NextFunction): void => {
+  const file = req.file
+  if (!file) {
+    next(new AppError('File is required', 400))
+    return
   }
 
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
-  if (!allowedTypes.includes(req.file.mimetype)) {
-    return next(new AppError('Invalid file type. Only JPEG, PNG, WebP, and PDF are allowed', 400))
+  if (!allowedTypes.includes(file.mimetype)) {
+    next(new AppError('Invalid file type. Only JPEG, PNG, WebP, and PDF are allowed', 400))
+    return
   }
 
-  const maxSize = 10 * 1024 * 1024 // 10MB
-  if (req.file.size > maxSize) {
-    return next(new AppError('File too large. Maximum size is 10MB', 413))
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    next(new AppError('File too large. Maximum size is 10MB', 413))
+    return
   }
 
   next()
 }
 
-// Sanitize input data
-export const sanitizeInput = (data) => {
+export const sanitizeInput = (data: unknown): unknown => {
   if (typeof data === 'string') {
     return data.trim()
   }
-  
+
   if (Array.isArray(data)) {
     return data.map(sanitizeInput)
   }
-  
+
   if (typeof data === 'object' && data !== null) {
-    const sanitized = {}
-    for (const [key, value] of Object.entries(data)) {
+    const sanitized: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
       sanitized[key] = sanitizeInput(value)
     }
     return sanitized
   }
-  
+
   return data
 }
 
-// Middleware to sanitize request body
-export const sanitizeBody = (req, res, next) => {
+export const sanitizeBody = (req: Request, _res: Response, next: NextFunction): void => {
   if (req.body) {
     req.body = sanitizeInput(req.body)
   }

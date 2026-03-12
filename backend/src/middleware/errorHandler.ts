@@ -1,6 +1,16 @@
-// Error handling middleware
+import type { ErrorRequestHandler, NextFunction, Request, RequestHandler, Response } from 'express'
 
-export const errorHandler = (err, req, res, next) => {
+interface ErrorShape {
+  message: string
+  status: number
+}
+
+interface AppErrorLike extends Error {
+  status?: number
+  code?: string
+}
+
+export const errorHandler: ErrorRequestHandler = (err: AppErrorLike, req: Request, res: Response, _next: NextFunction) => {
   console.error('Error occurred:', {
     message: err.message,
     stack: err.stack,
@@ -9,19 +19,16 @@ export const errorHandler = (err, req, res, next) => {
     timestamp: new Date().toISOString()
   })
 
-  // Default error
-  let error = {
+  const error: ErrorShape = {
     message: 'Internal Server Error',
     status: 500
   }
 
-  // Validation errors
   if (err.name === 'ValidationError') {
     error.message = err.message
     error.status = 400
   }
 
-  // JWT errors
   if (err.name === 'JsonWebTokenError') {
     error.message = 'Invalid token'
     error.status = 401
@@ -32,7 +39,6 @@ export const errorHandler = (err, req, res, next) => {
     error.status = 401
   }
 
-  // Multer errors (file upload)
   if (err.code === 'LIMIT_FILE_SIZE') {
     error.message = 'File too large'
     error.status = 413
@@ -43,19 +49,16 @@ export const errorHandler = (err, req, res, next) => {
     error.status = 400
   }
 
-  // Database errors
-  if (err.code === 'SQLITE_CONSTRAINT') {
+  if (err.code === 'SQLITE_CONSTRAINT' || err.code === '23505') {
     error.message = 'Database constraint violation'
     error.status = 400
   }
 
-  // Custom errors
-  if (err.status) {
+  if (typeof err.status === 'number') {
     error.status = err.status
     error.message = err.message
   }
 
-  // Don't leak error details in production
   if (process.env.NODE_ENV === 'production' && error.status === 500) {
     error.message = 'Internal Server Error'
   }
@@ -67,7 +70,7 @@ export const errorHandler = (err, req, res, next) => {
   })
 }
 
-export const notFoundHandler = (req, res) => {
+export const notFoundHandler: RequestHandler = (req: Request, res: Response) => {
   res.status(404).json({
     error: 'Not Found',
     message: `Route ${req.method} ${req.path} not found`,
@@ -75,14 +78,18 @@ export const notFoundHandler = (req, res) => {
   })
 }
 
-// Async error wrapper
-export const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next)
+export const asyncHandler = <T extends RequestHandler>(fn: T): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next)
+  }
 }
 
-// Custom error class
 export class AppError extends Error {
-  constructor(message, statusCode) {
+  status: number
+
+  isOperational: boolean
+
+  constructor(message: string, statusCode: number) {
     super(message)
     this.status = statusCode
     this.isOperational = true

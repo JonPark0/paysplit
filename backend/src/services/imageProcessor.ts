@@ -3,36 +3,50 @@ import { FileEncryption } from './crypto.js'
 
 const fileEncryption = new FileEncryption()
 
-// Image processing service
+interface ProcessImageResult {
+  originalFilename: string
+  encryptedFilename: string
+  fileSize: number
+  mimetype: string
+}
+
+interface UploadFileLike {
+  mimetype: string
+  size: number
+}
+
 export class ImageProcessor {
+  private maxWidth: number
+
+  private maxHeight: number
+
+  private quality: number
+
+  private maxFileSize: number
+
   constructor() {
     this.maxWidth = 1920
     this.maxHeight = 1920
     this.quality = 85
-    this.maxFileSize = 10 * 1024 * 1024 // 10MB
+    this.maxFileSize = 10 * 1024 * 1024
   }
 
-  async processImage(inputBuffer, originalFilename, mimetype) {
+  async processImage(inputBuffer: Buffer, originalFilename: string, mimetype: string): Promise<ProcessImageResult> {
     try {
-      // Validate file size
       if (inputBuffer.length > this.maxFileSize) {
         throw new Error('File too large')
       }
 
       let processedBuffer = inputBuffer
-
-      // Process image files (convert to WebP for optimization)
       if (mimetype.startsWith('image/')) {
-        processedBuffer = await this.optimizeImage(inputBuffer, mimetype)
+        processedBuffer = await this.optimizeImage(inputBuffer)
       }
 
-      // Encrypt the processed file
       const encryptionResult = await fileEncryption.encryptFile(
         processedBuffer,
         originalFilename
       )
 
-      // Save encrypted file
       await fileEncryption.saveEncryptedFile(
         encryptionResult.encryptedData,
         encryptionResult.encryptedFilename
@@ -50,54 +64,45 @@ export class ImageProcessor {
     }
   }
 
-  async optimizeImage(inputBuffer, mimetype) {
+  async optimizeImage(inputBuffer: Buffer): Promise<Buffer> {
     try {
       let sharpInstance = sharp(inputBuffer)
-
-      // Get image metadata
       const metadata = await sharpInstance.metadata()
 
-      // Resize if too large
-      if (metadata.width > this.maxWidth || metadata.height > this.maxHeight) {
+      if (
+        (metadata.width ?? 0) > this.maxWidth
+        || (metadata.height ?? 0) > this.maxHeight
+      ) {
         sharpInstance = sharpInstance.resize(this.maxWidth, this.maxHeight, {
           fit: 'inside',
           withoutEnlargement: true
         })
       }
 
-      // Convert to WebP for better compression
-      const optimizedBuffer = await sharpInstance
+      return await sharpInstance
         .webp({
           quality: this.quality,
-          effort: 4, // Higher effort for better compression
+          effort: 4,
           nearLossless: false
         })
         .toBuffer()
-
-      return optimizedBuffer
     } catch (error) {
       console.error('Image optimization failed:', error)
-      // If optimization fails, return original buffer
       return inputBuffer
     }
   }
 
-  async getImageBuffer(encryptedFilename) {
+  async getImageBuffer(encryptedFilename: string): Promise<Buffer> {
     try {
-      // Load encrypted file
       const encryptedData = await fileEncryption.loadEncryptedFile(encryptedFilename)
-      
-      // Decrypt file
-      const decryptedBuffer = await fileEncryption.decryptFile(encryptedData)
-      
-      return decryptedBuffer
+      return await fileEncryption.decryptFile(encryptedData)
     } catch (error) {
       console.error('Failed to get image buffer:', error)
       throw error
     }
   }
 
-  async deleteImage(encryptedFilename) {
+  async deleteImage(encryptedFilename: string): Promise<void> {
     try {
       await fileEncryption.deleteEncryptedFile(encryptedFilename)
     } catch (error) {
@@ -106,28 +111,24 @@ export class ImageProcessor {
     }
   }
 
-  // Generate thumbnail for preview
-  async generateThumbnail(inputBuffer, width = 300, height = 300) {
+  async generateThumbnail(inputBuffer: Buffer, width = 300, height = 300): Promise<Buffer> {
     try {
-      const thumbnail = await sharp(inputBuffer)
+      return await sharp(inputBuffer)
         .resize(width, height, {
           fit: 'cover',
           position: 'center'
         })
         .webp({ quality: 80 })
         .toBuffer()
-
-      return thumbnail
     } catch (error) {
       console.error('Thumbnail generation failed:', error)
       throw error
     }
   }
 
-  // Validate image file
-  validateImage(file) {
+  validateImage(file: UploadFileLike): boolean {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
-    const maxSize = 10 * 1024 * 1024 // 10MB
+    const maxSize = 10 * 1024 * 1024
 
     if (!allowedTypes.includes(file.mimetype)) {
       throw new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed')

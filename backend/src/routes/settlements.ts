@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { type Request } from 'express'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { validate, splitSchemas, settlementSchemas, sanitizeBody } from '../middleware/validation.js'
 import { checkRoomAccess } from '../middleware/auth.js'
@@ -6,10 +6,25 @@ import { ActivityLogger } from '../middleware/logger.js'
 import Settlement from '../models/Settlement.js'
 import Room from '../models/Room.js'
 import Participant from '../models/Participant.js'
+import type Database from '../utils/database.js'
 
 const router = express.Router()
 
-export default function(db) {
+const toParam = (value: string | string[] | undefined): string => {
+  if (Array.isArray(value)) {
+    return value[0] || ''
+  }
+  return value || ''
+}
+
+const getParticipant = (req: Request) => {
+  if (!req.participant) {
+    throw new Error('Participant context is missing')
+  }
+  return req.participant
+}
+
+export default function settlementRoutes(db: Database) {
   const settlementModel = new Settlement(db)
   const roomModel = new Room(db)
   const activityLogger = new ActivityLogger(db)
@@ -19,8 +34,8 @@ export default function(db) {
     checkRoomAccess(db),
     sanitizeBody,
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const participant = getParticipant(req)
       
       // Handle both single split and bulk split formats
       let splitsToCreate = []
@@ -122,8 +137,8 @@ export default function(db) {
     sanitizeBody,
     validate(splitSchemas.bulk),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const participant = getParticipant(req)
       const { splits } = req.body
 
       // Validate all items and participants belong to the room
@@ -183,8 +198,9 @@ export default function(db) {
     sanitizeBody,
     validate(splitSchemas.update),
     asyncHandler(async (req, res) => {
-      const { roomId, splitId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const splitId = toParam(req.params.splitId)
+      const participant = getParticipant(req)
       const { amount } = req.body
 
       // Verify split exists and belongs to the room
@@ -226,8 +242,9 @@ export default function(db) {
   router.delete('/:roomId/splits/:splitId',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId, splitId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const splitId = toParam(req.params.splitId)
+      const participant = getParticipant(req)
 
       // Verify split exists and belongs to the room
       const split = await db.get(`
@@ -267,7 +284,8 @@ export default function(db) {
   router.get('/:roomId/items/:itemId/splits',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId, itemId } = req.params
+      const roomId = toParam(req.params.roomId)
+      const itemId = toParam(req.params.itemId)
 
       // Verify item belongs to the room
       const item = await db.get(`
@@ -291,7 +309,7 @@ export default function(db) {
   router.get('/:roomId/calculate',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
 
       const settlement = await settlementModel.calculateOptimalSettlement(roomId)
 
@@ -312,8 +330,8 @@ export default function(db) {
     sanitizeBody,
     validate(settlementSchemas.create),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const participant = getParticipant(req)
       const { fromParticipantId, toParticipantId, amount } = req.body
 
       // Verify participants belong to the room
@@ -363,8 +381,9 @@ export default function(db) {
     sanitizeBody,
     validate(settlementSchemas.updateStatus),
     asyncHandler(async (req, res) => {
-      const { roomId, settlementId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const settlementId = toParam(req.params.settlementId)
+      const participant = getParticipant(req)
       const { status } = req.body
 
       // Get settlement details
@@ -415,7 +434,7 @@ export default function(db) {
   router.get('/:roomId/settlements',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
       const settlements = await settlementModel.getSettlementsByRoom(roomId)
 
       res.json({ settlements })
@@ -426,7 +445,7 @@ export default function(db) {
   router.get('/:roomId',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
       
       // Get total receipt amount for the room
       const totalReceiptAmount = await db.get(`
@@ -455,8 +474,8 @@ export default function(db) {
   router.post('/:roomId/recalculate',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const participant = getParticipant(req)
 
       // Recalculate optimal settlement
       const settlement = await settlementModel.calculateOptimalSettlement(roomId)
@@ -491,8 +510,9 @@ export default function(db) {
   router.delete('/:roomId/settlements/:settlementId',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId, settlementId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const settlementId = toParam(req.params.settlementId)
+      const participant = getParticipant(req)
 
       // Get settlement details
       const settlement = await db.get(`
@@ -535,8 +555,8 @@ export default function(db) {
   router.delete('/:roomId/splits',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const participant = getParticipant(req)
 
       // Only admin can clear all splits
       if (!participant.isAdmin) {
@@ -564,7 +584,8 @@ export default function(db) {
   router.get('/:roomId/participants/:participantId/balance',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId, participantId } = req.params
+      const roomId = toParam(req.params.roomId)
+      const participantId = toParam(req.params.participantId)
 
       // Verify participant belongs to the room
       const targetParticipant = await db.get(`

@@ -1,13 +1,23 @@
 import fs from 'fs/promises'
 import path from 'path'
+import type Database from '../utils/database.js'
 import Room from '../models/Room.js'
 
-// Cleanup expired rooms and associated data
-export const cleanupExpiredRooms = async (db) => {
+interface ReceiptFileRow {
+  encrypted_filename: string | null
+}
+
+interface DistinctFileRow {
+  encrypted_filename: string | null
+}
+
+const getUploadPath = (): string => process.env.UPLOAD_PATH || './uploads'
+
+export const cleanupExpiredRooms = async (db: Database): Promise<void> => {
   try {
     const roomModel = new Room(db)
     const expiredRooms = await roomModel.findExpiredRooms()
-    
+
     if (expiredRooms.length === 0) {
       console.log('No expired rooms found')
       return
@@ -15,7 +25,7 @@ export const cleanupExpiredRooms = async (db) => {
 
     console.log(`Found ${expiredRooms.length} expired rooms to clean up`)
 
-    for (const room of expiredRooms) {
+    for (const room of expiredRooms as Array<{ id: string; name: string | null }>) {
       try {
         await cleanupRoomData(db, room.id)
         console.log(`Cleaned up room: ${room.name || room.id}`)
@@ -31,53 +41,47 @@ export const cleanupExpiredRooms = async (db) => {
   }
 }
 
-// Clean up all data associated with a room
-const cleanupRoomData = async (db, roomId) => {
-  // Get all encrypted files associated with the room
-  const receipts = await db.all(`
-    SELECT encrypted_filename FROM receipts 
+const cleanupRoomData = async (db: Database, roomId: string): Promise<void> => {
+  const receipts = await db.all<ReceiptFileRow>(`
+    SELECT encrypted_filename FROM receipts
     WHERE room_id = ? AND encrypted_filename IS NOT NULL
   `, [roomId])
 
-  // Delete encrypted files from filesystem
-  const uploadPath = process.env.UPLOAD_PATH || './uploads'
+  const uploadPath = getUploadPath()
+
   for (const receipt of receipts) {
+    if (!receipt.encrypted_filename) {
+      continue
+    }
+
     try {
       const filePath = path.join(uploadPath, receipt.encrypted_filename)
       await fs.unlink(filePath)
       console.log(`Deleted file: ${receipt.encrypted_filename}`)
     } catch (error) {
-      // File might already be deleted, log but continue
-      console.warn(`Could not delete file ${receipt.encrypted_filename}:`, error.message)
+      const message = error instanceof Error ? error.message : String(error)
+      console.warn(`Could not delete file ${receipt.encrypted_filename}:`, message)
     }
   }
 
-  // Delete room from database (CASCADE will handle related records)
   await db.run('DELETE FROM rooms WHERE id = ?', [roomId])
 }
 
-// Clean up orphaned files (files without corresponding database records)
-export const cleanupOrphanedFiles = async (db) => {
+export const cleanupOrphanedFiles = async (db: Database): Promise<void> => {
   try {
-    const uploadPath = process.env.UPLOAD_PATH || './uploads'
-    
-    // Get all files from filesystem
+    const uploadPath = getUploadPath()
     const files = await fs.readdir(uploadPath)
-    
-    // Get all encrypted filenames from database
-    const dbFiles = await db.all(`
-      SELECT DISTINCT encrypted_filename 
-      FROM receipts 
+
+    const dbFiles = await db.all<DistinctFileRow>(`
+      SELECT DISTINCT encrypted_filename
+      FROM receipts
       WHERE encrypted_filename IS NOT NULL
     `)
-    
-    const dbFilenames = new Set(dbFiles.map(f => f.encrypted_filename))
-    
-    // Find orphaned files
-    const orphanedFiles = files.filter(file => 
-      file !== '.gitkeep' && !dbFilenames.has(file)
-    )
-    
+
+    const dbFilenames = new Set(dbFiles.map((file) => file.encrypted_filename).filter(Boolean) as string[])
+
+    const orphanedFiles = files.filter((file) => file !== '.gitkeep' && !dbFilenames.has(file))
+
     if (orphanedFiles.length === 0) {
       console.log('No orphaned files found')
       return
@@ -85,7 +89,6 @@ export const cleanupOrphanedFiles = async (db) => {
 
     console.log(`Found ${orphanedFiles.length} orphaned files`)
 
-    // Delete orphaned files
     for (const filename of orphanedFiles) {
       try {
         const filePath = path.join(uploadPath, filename)
@@ -103,11 +106,10 @@ export const cleanupOrphanedFiles = async (db) => {
   }
 }
 
-// Clean up expired sessions
-export const cleanupExpiredSessions = async (db) => {
+export const cleanupExpiredSessions = async (db: Database): Promise<void> => {
   try {
     const result = await db.run(`
-      DELETE FROM sessions 
+      DELETE FROM sessions
       WHERE expires_at < ?
     `, [new Date().toISOString()])
 
@@ -118,13 +120,12 @@ export const cleanupExpiredSessions = async (db) => {
   }
 }
 
-// Complete cleanup process
-export const runCompleteCleanup = async (db) => {
+export const runCompleteCleanup = async (db: Database): Promise<void> => {
   console.log('Starting complete cleanup process...')
-  
+
   await cleanupExpiredRooms(db)
   await cleanupExpiredSessions(db)
   await cleanupOrphanedFiles(db)
-  
+
   console.log('Complete cleanup process finished')
 }

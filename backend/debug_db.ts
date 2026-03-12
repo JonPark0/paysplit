@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Database from './src/utils/database.js';
 
 async function checkDatabase() {

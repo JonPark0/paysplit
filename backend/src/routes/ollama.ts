@@ -140,7 +140,7 @@ export default function ollamaRoutes(db) {
   router.get('/health', async (req, res) => {
     try {
       const config = getOcrConfig()
-      const healthStatus = {
+      const healthStatus: Record<string, unknown> = {
         provider: config.provider,
         status: 'healthy',
         timestamp: new Date().toISOString()
@@ -185,7 +185,7 @@ export default function ollamaRoutes(db) {
           throw new Error(`OLLAMA health check failed: ${response.status}`)
         }
 
-        const models = await response.json()
+        const models: any = await response.json()
         const availableModels = models.models?.map((model) => model.name) || []
 
         healthStatus.endpoint = config.ollamaBaseUrl
@@ -211,7 +211,7 @@ export default function ollamaRoutes(db) {
           throw new Error(`Mindlogic API health check failed: ${response.status}`)
         }
 
-        const models = await response.json()
+        const models: any = await response.json()
         const modelIds = models.data?.map((model) => model.id) || []
 
         healthStatus.endpoint = config.mindlogicApiFormat === 'anthropic'
@@ -281,7 +281,7 @@ async function processWithGemini(res, image, prompt, config, startedAt) {
       return res.status(502).json({ error: 'Gemini OCR request failed' })
     }
 
-    const result = await response.json()
+    const result: any = await response.json()
 
     const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || ''
     const { parsedResult } = parseStructuredOcrText(rawText)
@@ -332,7 +332,7 @@ async function processWithOllama(res, image, prompt, config, startedAt) {
       return res.status(502).json({ error: 'OLLAMA OCR request failed' })
     }
 
-    const result = await response.json()
+    const result: any = await response.json()
 
     const rawText = result.response || ''
     const { parsedResult } = parseStructuredOcrText(rawText)
@@ -410,7 +410,7 @@ async function processWithMindlogicOpenAI(res, image, prompt, config, startedAt)
       return res.status(502).json({ error: 'Mindlogic OCR request failed' })
     }
 
-    const result = await response.json()
+    const result: any = await response.json()
     const rawText = result.choices?.[0]?.message?.content || ''
     const { parsedResult } = parseStructuredOcrText(rawText)
 
@@ -457,7 +457,7 @@ async function processWithMindlogicAnthropic(res, image, prompt, config, started
       }]
     }
 
-    const headers = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'x-api-key': config.mindlogicApiKey,
       'anthropic-version': config.mindlogicAnthropicVersion
@@ -483,7 +483,7 @@ async function processWithMindlogicAnthropic(res, image, prompt, config, started
       return res.status(502).json({ error: 'Mindlogic OCR request failed' })
     }
 
-    const result = await response.json()
+    const result: any = await response.json()
     const rawText = (result.content || [])
       .filter((block) => block.type === 'text')
       .map((block) => block.text)

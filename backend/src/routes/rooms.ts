@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { type Request } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { validate, roomSchemas, sanitizeBody } from '../middleware/validation.js'
@@ -8,10 +8,69 @@ import { verifyRecaptchaRoomCreate, verifyRecaptchaRoomJoin } from '../middlewar
 import QRCode from 'qrcode'
 import Room from '../models/Room.js'
 import Participant from '../models/Participant.js'
+import type Database from '../utils/database.js'
 
 const router = express.Router()
 
-export default function(db) {
+interface ArchiveParticipantRow {
+  id: string
+  name: string
+  is_admin: boolean
+  created_at: string
+}
+
+interface ArchiveReceiptRow {
+  id: string
+  uploader_id: string
+  total_amount: number
+  [key: string]: unknown
+}
+
+interface ArchiveSettlementRow {
+  from_participant_id: string
+  status: string
+  amount: number
+  [key: string]: unknown
+}
+
+interface ArchiveReceiptItemRow {
+  id: string
+  receipt_id: string
+  name: string
+  price: number
+  quantity: number
+  category: string | null
+}
+
+interface ArchiveItemData {
+  id: string
+  name: string
+  price: number
+  quantity: number
+  category: string | null
+}
+
+const toParam = (value: string | string[] | undefined): string => {
+  if (Array.isArray(value)) {
+    return value[0] || ''
+  }
+  return value || ''
+}
+
+const toIntegerQuery = (value: unknown, fallback: number): number => {
+  const normalized = Array.isArray(value) ? value[0] : value
+  const parsed = Number.parseInt(String(normalized ?? fallback), 10)
+  return Number.isNaN(parsed) ? fallback : parsed
+}
+
+const getParticipant = (req: Request) => {
+  if (!req.participant) {
+    throw new Error('Participant context is missing')
+  }
+  return req.participant
+}
+
+export default function roomsRoutes(db: Database) {
   const roomModel = new Room(db)
   const participantModel = new Participant(db)
   const activityLogger = new ActivityLogger(db)
@@ -195,7 +254,7 @@ export default function(db) {
   router.get('/:roomId',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
       const room = await roomModel.findById(roomId)
       const participants = await participantModel.findByRoomId(roomId)
       const stats = await roomModel.getRoomStats(roomId)
@@ -221,7 +280,7 @@ export default function(db) {
   router.get('/:roomId/participants',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
       const participants = await participantModel.findByRoomId(roomId)
 
       res.json({ participants })
@@ -234,9 +293,9 @@ export default function(db) {
     sanitizeBody,
     validate(roomSchemas.updateStatus),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
       const { status } = req.body
-      const { participant } = req
+      const participant = getParticipant(req)
 
       // Only admin can change status
       if (!participant.isAdmin) {
@@ -261,7 +320,7 @@ export default function(db) {
   // Get room info (public, for join page)
   router.get('/:roomId/info',
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
       
       const room = await roomModel.findById(roomId)
       if (!room) {
@@ -301,7 +360,7 @@ export default function(db) {
   router.get('/:roomId/qr',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
       const room = await roomModel.findById(roomId)
       
       const roomUrl = `${process.env.CORS_ORIGIN}/join/${roomId}`
@@ -310,7 +369,6 @@ export default function(db) {
         const qrCodeDataUrl = await QRCode.toDataURL(roomUrl, {
           errorCorrectionLevel: 'M',
           type: 'image/png',
-          quality: 0.92,
           margin: 1,
           color: {
             dark: '#2563EB',
@@ -334,10 +392,10 @@ export default function(db) {
   router.get('/:roomId/activities',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { limit = 50 } = req.query
+      const roomId = toParam(req.params.roomId)
+      const limit = toIntegerQuery(req.query.limit, 50)
 
-      const activities = await activityLogger.getRoomActivities(roomId, parseInt(limit))
+      const activities = await activityLogger.getRoomActivities(roomId, limit)
 
       res.json({ logs: activities })
     })
@@ -347,8 +405,8 @@ export default function(db) {
   router.post('/:roomId/leave',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
-      const { participant } = req
+      const roomId = toParam(req.params.roomId)
+      const participant = getParticipant(req)
 
       // Get all participants to check if admin transfer is needed
       const participants = await participantModel.findByRoomId(roomId)
@@ -378,7 +436,7 @@ export default function(db) {
         // Find the next admin (first non-admin participant by join date)
         const nextAdmin = otherParticipants
           .filter(p => !p.isAdmin)
-          .sort((a, b) => new Date(a.joinedAt) - new Date(b.joinedAt))[0]
+          .sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime())[0]
         
         if (nextAdmin) {
           // Transfer admin rights
@@ -422,21 +480,21 @@ export default function(db) {
   router.get('/:roomId/archive',
     checkRoomAccess(db),
     asyncHandler(async (req, res) => {
-      const { roomId } = req.params
+      const roomId = toParam(req.params.roomId)
       const { format = 'json' } = req.query
 
       // Get comprehensive room data
       const [room, participants, receipts, settlements, activities] = await Promise.all([
         roomModel.findById(roomId),
-        db.all('SELECT id, name, is_admin, joined_at as created_at FROM participants WHERE room_id = ?', [roomId]),
-        db.all(`
+        db.all<ArchiveParticipantRow>('SELECT id, name, is_admin, joined_at as created_at FROM participants WHERE room_id = ?', [roomId]),
+        db.all<ArchiveReceiptRow>(`
           SELECT r.*, p.name as uploader_name
           FROM receipts r
           LEFT JOIN participants p ON r.uploader_id = p.id
           WHERE r.room_id = ?
           ORDER BY r.created_at DESC
         `, [roomId]),
-        db.all(`
+        db.all<ArchiveSettlementRow>(`
           SELECT s.*, 
                  from_p.name as from_name,
                  to_p.name as to_name
@@ -450,7 +508,7 @@ export default function(db) {
       ])
 
       // Get receipt items for all receipts
-      const receiptItems = await db.all(`
+      const receiptItems = await db.all<ArchiveReceiptItemRow>(`
         SELECT ri.*
         FROM receipt_items ri
         JOIN receipts r ON ri.receipt_id = r.id
@@ -458,7 +516,7 @@ export default function(db) {
       `, [roomId])
 
       // Group items by receipt
-      const itemsByReceipt = receiptItems.reduce((acc, item) => {
+      const itemsByReceipt = receiptItems.reduce<Record<string, ArchiveItemData[]>>((acc, item) => {
         if (!acc[item.receipt_id]) {
           acc[item.receipt_id] = []
         }

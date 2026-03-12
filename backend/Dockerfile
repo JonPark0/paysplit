@@ -1,4 +1,16 @@
 # Backend Dockerfile
+FROM node:24-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy source and build
+COPY . .
+RUN npm run build
+
 FROM node:24-alpine
 
 # Install curl for health checks
@@ -6,14 +18,12 @@ RUN apk add --no-cache curl
 
 WORKDIR /app
 
-# Copy package files
+# Install production dependencies only
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
-COPY . .
+# Copy compiled output
+COPY --from=builder /app/dist ./dist
 
 # Create necessary directories
 RUN mkdir -p /app/uploads
