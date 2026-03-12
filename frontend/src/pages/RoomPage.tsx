@@ -34,6 +34,7 @@ const RoomPage = () => {
   const {
     currentRoom,
     currentParticipant,
+    sessionToken,
     participants,
     receipts,
     settlements,
@@ -103,6 +104,91 @@ const RoomPage = () => {
 
     loadRoomData()
   }, [roomId, currentParticipant, navigate, language])
+
+  // Sync room data in near real-time (SSE + fallback polling)
+  useEffect(() => {
+    if (!roomId || !currentParticipant || !sessionToken) {
+      return
+    }
+
+    let cancelled = false
+    let inFlight = false
+    let eventSource: EventSource | null = null
+
+    const syncRoomData = async () => {
+      if (inFlight || showReceiptUpload || showReceiptEdit) {
+        return
+      }
+
+      if (document.visibilityState === 'hidden') {
+        return
+      }
+
+      inFlight = true
+
+      try {
+        const [roomResponse, receiptsResponse, settlementsResponse] = await Promise.all([
+          roomAPI.get(roomId),
+          receiptAPI.getAll(roomId),
+          settlementAPI.getSettlements(roomId)
+        ])
+
+        if (cancelled) {
+          return
+        }
+
+        const nextParticipants = roomResponse.participants || []
+        setCurrentRoom(roomResponse.room)
+        setParticipants(nextParticipants)
+        setRoomData(roomResponse)
+        setReceipts(receiptsResponse.receipts || [])
+        setSettlements(settlementsResponse.settlements || [])
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Failed to sync room data:', error)
+        }
+      } finally {
+        inFlight = false
+      }
+    }
+
+    if (typeof window !== 'undefined' && 'EventSource' in window) {
+      const streamUrl = `/api/rooms/${roomId}/events?sessionToken=${encodeURIComponent(sessionToken)}`
+      eventSource = new EventSource(streamUrl)
+
+      eventSource.addEventListener('room_update', () => {
+        void syncRoomData()
+      })
+
+      eventSource.onerror = () => {
+        if (eventSource) {
+          eventSource.close()
+          eventSource = null
+        }
+      }
+    }
+
+    const intervalId = window.setInterval(syncRoomData, 20000)
+    void syncRoomData()
+
+    return () => {
+      cancelled = true
+      window.clearInterval(intervalId)
+      if (eventSource) {
+        eventSource.close()
+      }
+    }
+  }, [
+    roomId,
+    currentParticipant,
+    sessionToken,
+    showReceiptUpload,
+    showReceiptEdit,
+    setCurrentRoom,
+    setParticipants,
+    setReceipts,
+    setSettlements
+  ])
 
   // Loading state
   if (loading.room) {

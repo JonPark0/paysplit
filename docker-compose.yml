@@ -20,7 +20,10 @@ services:
       retries: 5
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - VITE_RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
     container_name: paysplit-frontend
     ports:
       - "${FRONTEND_PORT:-8081}:80"

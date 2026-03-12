@@ -50,6 +50,14 @@ interface ArchiveItemData {
   category: string | null
 }
 
+interface RoomStreamSnapshot {
+  participant_count: number
+  receipt_count: number
+  pending_settlement_count: number
+  settlement_status: string
+  last_activity_epoch: number
+}
+
 const toParam = (value: string | string[] | undefined): string => {
   if (Array.isArray(value)) {
     return value[0] || ''
@@ -385,6 +393,91 @@ export default function roomsRoutes(db: Database) {
       } catch (error) {
         return res.status(500).json({ error: 'Failed to generate QR code' })
       }
+    })
+  )
+
+  // Server-Sent Events stream for room updates
+  router.get('/:roomId/events',
+    checkRoomAccess(db),
+    asyncHandler(async (req, res) => {
+      const roomId = toParam(req.params.roomId)
+
+      const fetchSnapshot = async (): Promise<RoomStreamSnapshot | null> => {
+        return db.get<RoomStreamSnapshot>(`
+          SELECT
+            (SELECT COUNT(*) FROM participants WHERE room_id = ?) as participant_count,
+            (SELECT COUNT(*) FROM receipts WHERE room_id = ?) as receipt_count,
+            (SELECT COUNT(*) FROM settlements WHERE room_id = ? AND status = 'pending') as pending_settlement_count,
+            r.settlement_status,
+            FLOOR(EXTRACT(EPOCH FROM r.last_activity))::BIGINT as last_activity_epoch
+          FROM rooms r
+          WHERE r.id = ?
+        `, [roomId, roomId, roomId, roomId])
+      }
+
+      const sendEvent = (event: string, data: Record<string, unknown>) => {
+        res.write(`event: ${event}\n`)
+        res.write(`data: ${JSON.stringify(data)}\n\n`)
+      }
+
+      res.setHeader('Content-Type', 'text/event-stream')
+      res.setHeader('Cache-Control', 'no-cache, no-transform')
+      res.setHeader('Connection', 'keep-alive')
+      res.setHeader('X-Accel-Buffering', 'no')
+      res.flushHeaders()
+
+      let closed = false
+      let lastSnapshotKey = ''
+
+      const checkAndSendSnapshot = async () => {
+        if (closed) {
+          return
+        }
+
+        const snapshot = await fetchSnapshot()
+        if (!snapshot) {
+          sendEvent('room_update', { roomId, deleted: true })
+          return
+        }
+
+        const nextKey = [
+          snapshot.participant_count,
+          snapshot.receipt_count,
+          snapshot.pending_settlement_count,
+          snapshot.settlement_status,
+          snapshot.last_activity_epoch
+        ].join('|')
+
+        if (nextKey !== lastSnapshotKey) {
+          lastSnapshotKey = nextKey
+          sendEvent('room_update', {
+            roomId,
+            participantCount: snapshot.participant_count,
+            receiptCount: snapshot.receipt_count,
+            pendingSettlementCount: snapshot.pending_settlement_count,
+            settlementStatus: snapshot.settlement_status,
+            lastActivityEpoch: snapshot.last_activity_epoch
+          })
+        }
+      }
+
+      await checkAndSendSnapshot()
+
+      const updateInterval = setInterval(() => {
+        void checkAndSendSnapshot()
+      }, 3000)
+
+      const heartbeatInterval = setInterval(() => {
+        if (!closed) {
+          res.write(': ping\n\n')
+        }
+      }, 25000)
+
+      req.on('close', () => {
+        closed = true
+        clearInterval(updateInterval)
+        clearInterval(heartbeatInterval)
+      })
     })
   )
 

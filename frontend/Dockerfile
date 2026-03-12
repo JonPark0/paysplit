@@ -10,6 +10,10 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Build-time public env vars
+ARG VITE_RECAPTCHA_SITE_KEY=""
+ENV VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY}
+
 # Build the app
 RUN npm run build
 

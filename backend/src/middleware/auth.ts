@@ -60,6 +60,15 @@ const getParamValue = (value: string | string[] | undefined): string | undefined
   return value
 }
 
+const getQueryValue = (value: unknown): string | undefined => {
+  if (Array.isArray(value)) {
+    const first = value[0]
+    return typeof first === 'string' ? first : undefined
+  }
+
+  return typeof value === 'string' ? value : undefined
+}
+
 export const authenticateToken = (req: AuthRequest, _res: Response, next: NextFunction): void => {
   const authHeader = getSingleHeaderValue(req.headers.authorization)
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined
@@ -85,7 +94,8 @@ export const checkRoomAccess = (db: Database) => {
     try {
       const roomId = getParamValue((req.params as Record<string, string | string[] | undefined>).roomId)
       const cookieToken = getSingleHeaderValue((req.cookies as Record<string, MaybeStringArray> | undefined)?.sessionToken)
-      const sessionToken = getSingleHeaderValue(req.headers['x-session-token']) || cookieToken
+      const queryToken = getQueryValue((req.query as Record<string, unknown> | undefined)?.sessionToken)
+      const sessionToken = getSingleHeaderValue(req.headers['x-session-token']) || cookieToken || queryToken
 
       if (!roomId) {
         next(new AppError('Room ID is required', 400))
@@ -162,7 +172,8 @@ export const validateRoomSession = (db: Database) => {
     try {
       const roomId = getParamValue((req.params as Record<string, string | string[] | undefined>).roomId)
       const cookieToken = getSingleHeaderValue((req.cookies as Record<string, MaybeStringArray> | undefined)?.sessionToken)
-      const sessionToken = cookieToken || getSingleHeaderValue(req.headers['x-session-token'])
+      const queryToken = getQueryValue((req.query as Record<string, unknown> | undefined)?.sessionToken)
+      const sessionToken = cookieToken || getSingleHeaderValue(req.headers['x-session-token']) || queryToken
 
       if (!roomId) {
         next(new AppError('Room ID is required', 400))
