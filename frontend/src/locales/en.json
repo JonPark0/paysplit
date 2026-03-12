@@ -60,14 +60,14 @@
   "helpPage": {
     "title": "Help",
     "introTitle": "PaySplit Help",
-    "introSubtitle": "Manage receipt splitting and settlements easily",
-    "introBody": "PaySplit helps groups split and settle shared expenses with transparency. Check the frequently asked questions below for common issues and solutions.",
+    "introSubtitle": "Split receipts and settle up with less hassle",
+    "introBody": "PaySplit helps groups track shared expenses, split costs, and settle payments transparently. Use the FAQs below for common questions and quick fixes.",
     "sections": [
       {
         "id": "getting-started",
         "title": "Getting Started",
         "items": [
-          { "question": "How do I create a room?", "answer": "Choose create room on the home page and enter room name/password." },
+          { "question": "How do I create a room?", "answer": "Select Create Room on the home page, then enter a room name and password." },
           { "question": "How do I join a room?", "answer": "Enter the room entry code, your name, and the room password." },
           { "question": "Can I rejoin with the same name?", "answer": "Yes. Use your existing password to reconnect as the same participant." }
         ]
@@ -78,7 +78,7 @@
         "items": [
           { "question": "OCR is not accurate", "answer": "Upload a clear, straight photo and review the parsed result in the editor." },
           { "question": "Can I upload PDF files?", "answer": "Yes. PDFs go through manual editing flow instead of image OCR." },
-          { "question": "Can I edit uploaded receipts?", "answer": "Yes. You can adjust item names, prices, and quantities in receipt editor." }
+          { "question": "Can I edit uploaded receipts?", "answer": "Yes. You can edit item names, prices, and quantities in the receipt editor." }
         ]
       },
       {
@@ -87,14 +87,14 @@
         "items": [
           { "question": "Which split modes are available?", "answer": "Equal split, itemized split, and manual amount input are supported." },
           { "question": "How is settlement calculated?", "answer": "The app computes an optimized transfer plan from paid and split amounts." },
-          { "question": "Who marks settlement completed?", "answer": "Related participants can update each transfer item to completed." }
+          { "question": "Who marks settlements as completed?", "answer": "The related participants can mark each transfer item as completed." }
         ]
       }
     ],
     "supportTitle": "Need more help?",
     "supportTips": [
       "Ask the room admin",
-      "Refresh browser or clear cache and retry",
+      "Refresh the browser or clear cache, then try again",
       "Try another browser or device"
     ],
     "quickStartTitle": "Quick Start",
@@ -110,8 +110,8 @@
         "id": "collection",
         "title": "Data We Collect",
         "items": [
-          "Participant name, password, and receipt/split data",
-          "Activity logs and session data for service operation",
+          "Participant names, passwords, and receipt/split data",
+          "Activity logs and session data required for service operation",
           "Minimal technical data such as browser language/device"
         ]
       },
@@ -119,16 +119,16 @@
         "id": "usage",
         "title": "How We Use Data",
         "items": [
-          "Provide bill splitting and settlement functionality",
+          "Provide bill-splitting and settlement features",
           "Authenticate room access and maintain security",
-          "Support OCR processing and quality improvements"
+          "Support OCR processing and service-quality improvements"
         ]
       },
       {
         "id": "retention",
         "title": "Retention & Deletion",
         "items": [
-          "Automatically deleted one month after settlement completion",
+          "Automatically deleted one month after settlement is completed",
           "Deletion includes files, personal data, logs, and sessions",
           "Download archive beforehand if needed"
         ]
@@ -139,14 +139,14 @@
         "items": [
           "We do not sell or provide personal data to third parties",
           "Room information is shared only within the same room",
-          "Legal/security requests are handled with minimal scope"
+          "Legal or security requests are handled with the minimum required scope"
         ]
       }
     ]
   },
   "termsPage": {
     "title": "Terms of Service",
-    "subtitle": "Service Terms",
+    "subtitle": "Terms for Using the Service",
     "updatedAt": "Last updated: Dec 2024",
     "scope": "Scope: PaySplit service (palnarium.com)",
     "sections": [
@@ -154,8 +154,8 @@
         "id": "overview",
         "title": "Service Overview",
         "items": [
-          "PaySplit is a web service for group expense split/settlement",
-          "Receipt OCR and settlement calculation features are provided",
+          "PaySplit is a web service for group expense splitting and settlement",
+          "The service includes receipt OCR and settlement-calculation features",
           "Features may change according to operational policy"
         ]
       },
@@ -163,7 +163,7 @@
         "id": "eligibility",
         "title": "Conditions of Use",
         "items": [
-          "Provide accurate data and use at your own responsibility",
+          "Provide accurate information and use the service responsibly",
           "Comply with applicable laws and these terms",
           "Keep passwords and access credentials secure"
         ]
@@ -181,7 +181,7 @@
         "id": "liability",
         "title": "Liability & Limitations",
         "items": [
-          "OCR accuracy may vary by input quality",
+          "OCR accuracy may vary depending on input quality",
           "Users must verify final settlement amounts",
           "We strive for fast recovery in case of incidents"
         ]
@@ -190,7 +190,7 @@
   },
   "footer": {
     "brand": "PaySplit",
-    "madeWith": "Made with",
+    "madeWith": "Built with care",
     "forBillSplitting": "for easier bill splitting",
     "links": "Links",
     "privacy": "Privacy Policy",
@@ -439,7 +439,7 @@
   },
   "settingsPage": {
     "logsLoadFailed": "Failed to load activity logs",
-    "archiveDownloadSuccess": "Archive download completed",
+    "archiveDownloadSuccess": "Archive downloaded",
     "archiveDownloadFailed": "Failed to download archive",
     "userFallback": "User",
     "roomInfoMissing": "Room information is unavailable",
@@ -462,13 +462,13 @@
     },
     "archive": {
       "title": "Data archive",
-      "description": "You can download all room data as a file. It includes activity logs and settlement information for transparency and record keeping.",
+      "description": "Download all room data as a file, including activity logs and settlement details for transparency and recordkeeping.",
       "fullTitle": "Full data archive",
-      "fullDescription": "Includes all room data (participants, receipts, split details, settlement results, and activity logs).",
+      "fullDescription": "Includes all room data: participants, receipts, split details, settlement results, and activity logs.",
       "downloading": "Downloading...",
       "downloadJson": "Download as JSON",
       "summaryTitle": "Summary report",
-      "summaryDescription": "A concise report containing settlement results and key statistics.",
+      "summaryDescription": "A concise report with settlement results and key statistics.",
       "downloadSummary": "Download summary report",
       "securityNoticeTitle": "Data security notice",
       "securityNotice1": "Downloaded files may contain personal information",
@@ -476,16 +476,16 @@
       "securityNotice3": "Data is automatically deleted from the server one month after settlement completion"
     },
     "leave": {
-      "description": "After leaving, you can no longer participate in this room.",
+      "description": "Once you leave, you can no longer participate in this room.",
       "adminTransfer": "If you are an admin, admin privileges are automatically transferred to another participant.",
       "confirmTitle": "Confirmation",
-      "confirmDescription": "To leave the room, type the room name exactly below:",
+      "confirmDescription": "To leave the room, type the room name exactly as shown below:",
       "roomNameToType": "Room name to type:",
       "confirmLabel": "Confirm room name",
       "confirmPlaceholder": "Type the room name above exactly",
       "cautionTitle": "Caution",
       "caution1": "You will lose access to this room's data after leaving",
-      "caution2": "Leaving before settlement completion may affect settlement",
+      "caution2": "Leaving before settlement is completed may affect settlement flow",
       "caution3": "If an admin leaves, admin rights are transferred to another participant",
       "caution4": "You will need the entry code to join again later"
     }
@@ -499,7 +499,7 @@
     "uploadFirst": "Please upload a receipt first",
     "receiptLabel": "Receipt #{{id}}",
     "splitDone": "Split completed",
-    "splitPending": "Split pending",
+    "splitPending": "Awaiting split",
     "itemCount": "{{count}} item(s)",
     "moreItems": "+{{count}} more",
     "editSplit": "Edit split",
@@ -517,19 +517,19 @@
     "checkSplit": "Please check split details",
     "saved": "Split saved",
     "saveFailed": "Failed to save split",
-    "receiptInfo": "Receipt info",
+    "receiptInfo": "Receipt details",
     "totalLabel": "Total:",
     "itemCountLabel": "Items:",
     "participantsLabel": "Participants:",
     "splitType": "Split type",
     "equalDesc": "All participants pay equally",
     "itemizedSplit": "Itemized split",
-    "itemizedDesc": "Set quantity per item for each participant",
+    "itemizedDesc": "Set per-item quantities for each participant",
     "manualDesc": "Enter each participant amount manually",
     "equalResult": "Equal split result",
     "remainingQty": "(Remaining: {{count}})",
     "qtyUnit": "qty",
-    "manualInput": "Manual amount input",
+    "manualInput": "Manual amount entry",
     "summary": "Split summary",
     "receiptTotal": "Receipt total",
     "totalDiff": "Total difference: {{diff}}",
@@ -539,12 +539,12 @@
   },
   "receiptUpload": {
     "retryError": "An error occurred while retrying analysis",
-    "retryFailedIssue": "Retry failed to analyze",
+    "retryFailedIssue": "Retry failed to analyze the receipt",
     "or": "or",
     "uploading": "Uploading file...",
     "progressDone": "{{progress}}% done",
     "analyzing": "Analyzing receipt content...",
-    "resultTitle": "Analysis result",
+    "resultTitle": "Analysis Results",
     "accuracy": "{{score}}% accuracy",
     "detectedItems": "Detected items: {{count}}",
     "moreItems": "+{{count}} more items...",
