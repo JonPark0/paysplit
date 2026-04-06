@@ -226,11 +226,15 @@ export const roomCreationRules = {
     (value: unknown) => validateRequired(value, 'Admin name'),
     (value: unknown) => validateMaxLength(value, 50, 'Admin name')
   ],
-  password: [
-    (value: unknown) => validatePassword(String(value ?? ''))
-  ],
   name: [
     (value: unknown) => validateRoomName(String(value ?? ''))
+  ]
+}
+
+export const roomCreationWithPasswordRules = {
+  ...roomCreationRules,
+  password: [
+    (value: unknown) => validatePassword(String(value ?? ''))
   ]
 }
 
@@ -240,8 +244,5 @@ export const roomJoinRules = {
   ],
   participantName: [
     (value: unknown) => validateParticipantName(String(value ?? ''))
-  ],
-  password: [
-    (value: unknown) => validatePassword(String(value ?? ''))
   ]
 }

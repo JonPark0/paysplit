@@ -250,6 +250,7 @@
       "adminNamePlaceholder": "Enter your name",
       "password": "Password",
       "passwordPlaceholder": "Enter room password",
+      "usePassword": "Use password",
       "language": "Language",
       "creating": "Creating room...",
       "success": "Room created successfully!"
@@ -262,6 +263,7 @@
       "participantNamePlaceholder": "Enter your name",
       "password": "Password",
       "passwordPlaceholder": "Enter password",
+      "passwordOptionalPlaceholder": "Password (if room requires one)",
       "joining": "Joining...",
       "success": "Successfully joined the room!"
     },
@@ -273,7 +275,9 @@
       "status": "Status",
       "created": "Created",
       "lastActivity": "Last Activity",
-      "clickToEnter": "Click to enter room"
+      "clickToEnter": "Click to enter room",
+      "passwordProtected": "Password protected",
+      "noPassword": "No password"
     },
     "share": {
       "title": "Share Room",

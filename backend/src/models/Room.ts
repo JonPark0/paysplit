@@ -5,7 +5,7 @@ import type Database from '../utils/database.js'
 interface CreateRoomInput {
   name?: string
   adminName: string
-  password: string
+  password?: string | null
   language?: string
 }
 
@@ -13,6 +13,7 @@ interface RoomRow {
   id: string
   name: string | null
   admin_name: string
+  password_hash: string | null
   entry_code: string
   language: string
   created_at: string
@@ -42,7 +43,7 @@ class Room {
 
     const id = uuidv4()
     const entryCode = this.generateEntryCode()
-    const passwordHash = await bcrypt.hash(password, 12)
+    const passwordHash = password ? await bcrypt.hash(password, 12) : null
 
     await this.db.run(`
       INSERT INTO rooms (id, name, admin_name, password_hash, entry_code, language)
@@ -55,6 +56,7 @@ class Room {
       adminName,
       entryCode,
       language,
+      hasPassword: !!password,
       createdAt: new Date().toISOString(),
       settlementStatus: 'active'
     }
@@ -65,6 +67,7 @@ class Room {
       id: room.id,
       name: room.name,
       adminName: room.admin_name,
+      hasPassword: !!room.password_hash,
       entryCode: room.entry_code,
       language: room.language,
       createdAt: room.created_at,

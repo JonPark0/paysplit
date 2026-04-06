@@ -15,6 +15,7 @@ export interface Room {
   entryCode?: string
   language?: string
   adminName?: string
+  hasPassword?: boolean
   settlementStatus?: RoomStatus
   [key: string]: unknown
 }

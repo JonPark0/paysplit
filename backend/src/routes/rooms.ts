@@ -90,12 +90,13 @@ export default function roomsRoutes(db: Database) {
     verifyRecaptchaRoomCreate,
     asyncHandler(async (req, res) => {
       const { name, adminName, password, language } = req.body
+      const hasPassword = !!password
 
       // Create room
       const room = await roomModel.create({
         name,
         adminName,
-        password,
+        password: hasPassword ? password : null,
         language
       })
 
@@ -103,7 +104,7 @@ export default function roomsRoutes(db: Database) {
       const admin = await participantModel.create({
         roomId: room.id,
         name: adminName,
-        password,
+        password: hasPassword ? password : null,
         isAdmin: true
       })
 
@@ -138,7 +139,8 @@ export default function roomsRoutes(db: Database) {
           name: room.name,
           entryCode: room.entryCode,
           language: room.language,
-          adminName: room.adminName
+          adminName: room.adminName,
+          hasPassword: room.hasPassword
         },
         participant: {
           id: admin.id,
@@ -164,13 +166,18 @@ export default function roomsRoutes(db: Database) {
         return res.status(404).json({ error: 'Room not found' })
       }
 
+      // Check if room requires password
+      const roomHasPassword = room.hasPassword
+
       // Check if participant name already exists
       const existingParticipant = await participantModel.findByRoomAndName(room.id, participantName)
       if (existingParticipant) {
-        // Verify password for existing participant
-        const isValidPassword = await participantModel.verifyPassword(existingParticipant.id, password)
-        if (!isValidPassword) {
-          return res.status(401).json({ error: 'Incorrect password' })
+        // Verify password for existing participant (only if room uses passwords)
+        if (roomHasPassword) {
+          const isValidPassword = await participantModel.verifyPassword(existingParticipant.id, password)
+          if (!isValidPassword) {
+            return res.status(401).json({ error: 'Incorrect password' })
+          }
         }
 
         // Generate new session for existing participant
@@ -196,7 +203,8 @@ export default function roomsRoutes(db: Database) {
           room: {
             id: room.id,
             name: room.name,
-            language: room.language
+            language: room.language,
+            hasPassword: roomHasPassword
           },
           participant: {
             id: existingParticipant.id,
@@ -211,7 +219,7 @@ export default function roomsRoutes(db: Database) {
       const participant = await participantModel.create({
         roomId: room.id,
         name: participantName,
-        password,
+        password: roomHasPassword ? password : null,
         isAdmin: false
       })
 
@@ -246,7 +254,8 @@ export default function roomsRoutes(db: Database) {
         room: {
           id: room.id,
           name: room.name,
-          language: room.language
+          language: room.language,
+          hasPassword: roomHasPassword
         },
         participant: {
           id: participant.id,
@@ -274,6 +283,7 @@ export default function roomsRoutes(db: Database) {
           entryCode: room.entryCode,
           language: room.language,
           adminName: room.adminName,
+          hasPassword: room.hasPassword,
           createdAt: room.createdAt,
           lastActivity: room.lastActivity,
           settlementStatus: room.settlementStatus
@@ -356,6 +366,7 @@ export default function roomsRoutes(db: Database) {
           name: room.name,
           language: room.language,
           entryCode: room.entryCode,
+          hasPassword: room.hasPassword,
           participantCount: participantCount?.count || 0,
           receiptCount: receiptCount?.count || 0,
           totalAmount: totalAmount?.total || 0

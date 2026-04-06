@@ -189,6 +189,13 @@ class Database {
         ]
       },
       {
+        name: '004_optional_password',
+        statements: [
+          `ALTER TABLE rooms ALTER COLUMN password_hash DROP NOT NULL`,
+          `ALTER TABLE participants ALTER COLUMN password_hash DROP NOT NULL`
+        ]
+      },
+      {
         name: '003_add_payer_to_receipts',
         statements: [
           'ALTER TABLE receipts ADD COLUMN IF NOT EXISTS payer_id TEXT',

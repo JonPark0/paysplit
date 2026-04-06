@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X, Copy, Download, QrCode } from 'lucide-react'
+import { X, Copy, Download, QrCode, Lock, Unlock } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import Button from '../common/Button'
 
@@ -101,8 +101,21 @@ const ShareModal = ({ isOpen, onClose, roomData, qrData }) => {
                   className="w-48 h-48"
                 />
               </div>
-              <p className="text-sm text-neutral-600 mb-4">
+              <p className="text-sm text-neutral-600 mb-2">
                 {t('room.info.entryCode')}: <span className="font-mono font-bold">{qrData.entryCode}</span>
+              </p>
+              <p className="flex items-center justify-center gap-1 text-sm mb-4">
+                {roomData.hasPassword ? (
+                  <span className="inline-flex items-center gap-1 text-amber-600">
+                    <Lock className="w-3.5 h-3.5" />
+                    {t('room.info.passwordProtected')}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-green-600">
+                    <Unlock className="w-3.5 h-3.5" />
+                    {t('room.info.noPassword')}
+                  </span>
+                )}
               </p>
               <Button
                 onClick={downloadQRCode}

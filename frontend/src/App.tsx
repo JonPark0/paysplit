@@ -31,12 +31,12 @@ function App() {
       if (pathLang !== language) {
         setLanguage(pathLang)
       }
-    } else {
-      // Redirect to language-specific URL
+    } else if (pathLang !== 'join') {
+      // Redirect to language-specific URL (skip /join/* routes - they are language-independent)
       const newPath = `/${language}${window.location.pathname}`
       window.history.replaceState(null, '', newPath)
     }
-    
+
     i18n.changeLanguage(language)
     document.documentElement.lang = language
   }, [language, setLanguage, i18n])

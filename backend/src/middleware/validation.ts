@@ -22,7 +22,7 @@ export const roomSchemas = {
   create: Joi.object({
     name: Joi.string().max(100).optional().allow(''),
     adminName: Joi.string().min(1).max(50).required(),
-    password: Joi.string().min(4).max(100).required(),
+    password: Joi.string().min(4).max(100).optional().allow('', null),
     language: Joi.string().valid('ko', 'en').default('ko'),
     recaptchaToken: Joi.string().allow(null).optional()
   }),
@@ -30,7 +30,7 @@ export const roomSchemas = {
   join: Joi.object({
     entryCode: Joi.string().pattern(/^\d{6}$/).required(),
     participantName: Joi.string().min(1).max(50).required(),
-    password: Joi.string().min(4).max(100).required(),
+    password: Joi.string().min(4).max(100).optional().allow('', null),
     recaptchaToken: Joi.string().allow(null).optional()
   }),
 

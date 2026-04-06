@@ -250,6 +250,7 @@
       "adminNamePlaceholder": "당신의 이름을 입력하세요",
       "password": "비밀번호",
       "passwordPlaceholder": "방 비밀번호를 입력하세요",
+      "usePassword": "비밀번호 사용",
       "language": "언어",
       "creating": "방 생성 중...",
       "success": "방이 성공적으로 생성되었습니다!"
@@ -262,6 +263,7 @@
       "participantNamePlaceholder": "당신의 이름을 입력하세요",
       "password": "비밀번호",
       "passwordPlaceholder": "비밀번호를 입력하세요",
+      "passwordOptionalPlaceholder": "비밀번호 (방에 설정된 경우)",
       "joining": "참여 중...",
       "success": "방에 성공적으로 참여했습니다!"
     },
@@ -273,7 +275,9 @@
       "status": "상태",
       "created": "생성일",
       "lastActivity": "마지막 활동",
-      "clickToEnter": "클릭하여 방으로 이동"
+      "clickToEnter": "클릭하여 방으로 이동",
+      "passwordProtected": "비밀번호 보호됨",
+      "noPassword": "비밀번호 없음"
     },
     "share": {
       "title": "방 공유하기",

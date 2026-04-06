@@ -5,7 +5,7 @@ import type Database from '../utils/database.js'
 interface CreateParticipantInput {
   roomId: string
   name: string
-  password: string
+  password?: string | null
   isAdmin?: boolean
 }
 
@@ -33,7 +33,7 @@ class Participant {
     } = data
 
     const id = uuidv4()
-    const passwordHash = await bcrypt.hash(password, 12)
+    const passwordHash = password ? await bcrypt.hash(password, 12) : null
 
     await this.db.run(`
       INSERT INTO participants (id, room_id, name, password_hash, is_admin)

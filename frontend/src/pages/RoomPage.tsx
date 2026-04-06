@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { 
-  Users, 
-  Receipt as ReceiptIcon, 
-  Calculator, 
-  Share2, 
+import {
+  Users,
+  Receipt as ReceiptIcon,
+  Calculator,
+  Share2,
   Settings,
   Plus,
   FileText,
-  DollarSign
+  DollarSign,
+  Lock,
+  Unlock
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
@@ -427,8 +429,23 @@ const RoomPage = () => {
                   {t(`room.status.${currentRoom.settlementStatus}`)}
                 </span>
               </span>
-              <span className="text-sm text-neutral-500">
-                {t('room.info.entryCode')}: {currentRoom.entryCode}
+              <span className="flex items-center gap-3 text-sm text-neutral-500">
+                <span>
+                  {t('room.info.entryCode')}: {currentRoom.entryCode}
+                </span>
+                <span className="flex items-center gap-1">
+                  {currentRoom.hasPassword ? (
+                    <>
+                      <Lock className="w-3.5 h-3.5" />
+                      {t('room.info.passwordProtected')}
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="w-3.5 h-3.5" />
+                      {t('room.info.noPassword')}
+                    </>
+                  )}
+                </span>
               </span>
             </div>
           </div>

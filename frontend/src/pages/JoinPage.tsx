@@ -16,7 +16,7 @@ const JoinPage = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { language } = useSettingsStore()
-  const { setCurrentRoom, setCurrentParticipant } = useRoomStore()
+  const { setCurrentRoom, setCurrentParticipant, setSessionToken, addRoom } = useRoomStore()
 
   const [loading, setLoading] = useState(false)
   const [roomInfo, setRoomInfo] = useState(null)
@@ -62,7 +62,8 @@ const JoinPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.entryCode || !formData.participantName || !formData.password) {
+    const needsPassword = roomInfo?.hasPassword !== false
+    if (!formData.entryCode || !formData.participantName || (needsPassword && !formData.password)) {
       toast.error(t('errors.required'))
       return
     }
@@ -82,9 +83,11 @@ const JoinPage = () => {
       // Store session data
       setCurrentRoom(response.room)
       setCurrentParticipant(response.participant)
-      
+      setSessionToken(response.sessionToken)
+      addRoom(response.room, response.participant, response.sessionToken)
+
       toast.success(t('room.join.success'))
-      
+
       // Navigate to room page
       navigate(`/${language}/room/${roomId}`)
     } catch (error) {
@@ -193,24 +196,26 @@ const JoinPage = () => {
             </div>
           </div>
 
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              {t('room.join.password')}
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                placeholder={t('room.join.passwordPlaceholder')}
-                className="w-full pl-10 pr-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
+          {/* Password (only if room requires it) */}
+          {roomInfo?.hasPassword !== false && (
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                {t('room.join.password')}
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder={t('room.join.passwordPlaceholder')}
+                  className="w-full pl-10 pr-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  required
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Submit Button */}
           <Button

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Users, Camera, Calculator, Shield, ArrowRight } from 'lucide-react'
+import { Plus, Users, Camera, Calculator, Shield, ArrowRight, Lock } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 import Button from '../components/common/Button'
@@ -11,7 +11,7 @@ import RecaptchaInfo from '../components/common/RecaptchaInfo'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useRoomStore } from '../stores/roomStore'
 import { roomAPI } from '../services/api'
-import { createValidator, roomCreationRules, roomJoinRules } from '../utils/validation'
+import { createValidator, roomCreationRules, roomCreationWithPasswordRules, roomJoinRules } from '../utils/validation'
 import recaptchaService from '../services/recaptcha'
 
 const HomePage = () => {
@@ -23,6 +23,7 @@ const HomePage = () => {
   type CreateForm = {
     name: string
     adminName: string
+    usePassword: boolean
     password: string
     language: 'ko' | 'en'
   }
@@ -42,6 +43,7 @@ const HomePage = () => {
   const [createForm, setCreateForm] = useState<CreateForm>({
     name: '',
     adminName: '',
+    usePassword: false,
     password: '',
     language: language
   })
@@ -56,7 +58,9 @@ const HomePage = () => {
   const [joinErrors, setJoinErrors] = useState<Record<string, string | null>>({})
 
   // Validators
-  const validateCreateForm = createValidator(roomCreationRules)
+  const validateCreateForm = createValidator(
+    createForm.usePassword ? roomCreationWithPasswordRules : roomCreationRules
+  )
   const validateJoinForm = createValidator(roomJoinRules)
 
   // Create room
@@ -76,8 +80,10 @@ const HomePage = () => {
       // Get reCAPTCHA token
       const recaptchaToken = await recaptchaService.getRoomCreateToken()
       
+      const { usePassword: _usePassword, ...formData } = createForm
       const response = await roomAPI.create({
-        ...createForm,
+        ...formData,
+        password: createForm.usePassword ? createForm.password : null,
         language: language,
         recaptchaToken
       })
@@ -247,16 +253,46 @@ const HomePage = () => {
                       fullWidth
                     />
 
-                    <Input
-                      label={t('room.create.password')}
-                      type="password"
-                      placeholder={t('room.create.passwordPlaceholder')}
-                      value={createForm.password}
-                      onChange={(e) => handleCreateFormChange('password', e.target.value)}
-                      error={createErrors.password}
-                      required
-                      fullWidth
-                    />
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer select-none">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={createForm.usePassword}
+                            onChange={(e) => {
+                              handleCreateFormChange('usePassword', e.target.checked ? 'true' : '')
+                              setCreateForm(prev => ({
+                                ...prev,
+                                usePassword: e.target.checked,
+                                password: e.target.checked ? prev.password : ''
+                              }))
+                              if (!e.target.checked) {
+                                setCreateErrors(prev => ({ ...prev, password: null }))
+                              }
+                            }}
+                            className="sr-only peer"
+                          />
+                          <div className="w-10 h-6 bg-neutral-300 peer-checked:bg-primary-500 rounded-full transition-colors" />
+                          <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4" />
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm font-medium text-neutral-700">
+                          <Lock className="w-4 h-4" />
+                          {t('room.create.usePassword')}
+                        </div>
+                      </label>
+                      {createForm.usePassword && (
+                        <Input
+                          label={t('room.create.password')}
+                          type="password"
+                          placeholder={t('room.create.passwordPlaceholder')}
+                          value={createForm.password}
+                          onChange={(e) => handleCreateFormChange('password', e.target.value)}
+                          error={createErrors.password}
+                          required
+                          fullWidth
+                        />
+                      )}
+                    </div>
 
                     <Button
                       type="submit"
@@ -297,11 +333,10 @@ const HomePage = () => {
                     <Input
                       label={t('room.join.password')}
                       type="password"
-                      placeholder={t('room.join.passwordPlaceholder')}
+                      placeholder={t('room.join.passwordOptionalPlaceholder')}
                       value={joinForm.password}
                       onChange={(e) => handleJoinFormChange('password', e.target.value)}
                       error={joinErrors.password}
-                      required
                       fullWidth
                     />
 
